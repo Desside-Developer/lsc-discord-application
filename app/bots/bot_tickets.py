@@ -1,58 +1,64 @@
-import os
-import sys
+#!/usr/bin/env python3
+
+from discord.ext import commands
+from dispie import EmbedCreator
 import discord
-from discord import app_commands
-from dotenv import load_dotenv
-import importlib
-# Устанавливаем текущую директорию на директорию скрипта
-current_directory = os.path.dirname(os.path.abspath(__file__))
-os.chdir(current_directory)
+from config import Bot_tickets, tickets_cogs
 
-# Добавляем 'app' в sys.path
-app_directory = os.path.join(current_directory, 'app')
-sys.path.append(app_directory)
+class ticket_launcher(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+    @discord.ui.button(label="Create a Ticket", style=discord.ButtonStyle.blurple, custom_id="Ticket Button")
+    async def ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        ticket = discord.utils.get(interaction.guild.text_channels, name=f"ticket-for-{interaction.user.name}-{interaction.user.discriminator}")
+        if ticket is not None: await interaction.response.send_message(f"You already have a ticket open at {ticket.mention}!", ephemeral=True)
+        else:
+            overwrites = {
+                interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False),
+                interaction.user: discord.PermissionOverwrite(view_channel=True, send_messages=True, attach_files=True, embed_links=True),
+                interaction.guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
+            }
+            channel = await interaction.guild.create_text_channel(name=f"ticket-for-{interaction.user.name}-{interaction.user.discriminator}", overwrites=overwrites, reason=f"Ticket for {interaction.user}")
+            await channel.send(f"{interaction.user.mention} Created a ticket!")
+            await interaction.response.send_message(f"I've opened a ticket for you at {channel.mention}!", ephemeral=True)
 
-load_dotenv()
-BOT_TICKETS = os.getenv('BOT_TICKETS')
+class Bot(commands.Bot):
+    def __init__(self, intents: discord.Intents, **kwargs):
+        super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents, **kwargs)
+        self.synced = False #we use this so the bot doesn't sync commands more than once
+        self.added = False
 
-intents = discord.Intents.all()
-client = discord.Client(intents=intents)
-tree = app_commands.CommandTree(client)
-
-async def load_commands():
-    # Используем относительный путь к папке с командами относительно main.py
-    commands_folder = os.path.join(current_directory, '..', 'commands')
-    for filename in os.listdir(commands_folder):
-        if filename.startswith('tickets_') and filename.endswith('.py'):
-            module_name = filename[:-3]  # remove the '.py' extension
-            module_path = os.path.join(commands_folder, filename)
+    async def setup_hook(self):
+        for cog in tickets_cogs:
             try:
-                spec = importlib.util.spec_from_file_location(f'app.commands.{module_name}', module_path)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                for attribute_name in dir(module):
-                    attribute = getattr(module, attribute_name)
-                    if callable(attribute) and hasattr(attribute, 'slash_command'):
-                        tree.add_command(attribute)
-                        print(f"Loaded command: {attribute_name}")
+                await self.load_extension(cog)
+            except Exception as exc:
+                print(f'Could not load extension {cog} due to {exc.__class__.__name__}: {exc}')
 
-            except Exception as e:
-                print(f"Failed to load extension {filename}.", e)
+    async def on_ready(self):
+        print(f'Logged on as {self.user} (ID: {self.user.id})')
+        await self.tree.sync()
+        if not self.added:
+            self.add_view(ticket_launcher())
+            self.added = True
 
-@client.event
-async def on_ready():
-    await load_commands()
-    await tree.sync()
-    print("Ready!")
 
-@tree.command(
-    name="tickets",
-    description="create ticket and ...",
-)
-async def first_command(interaction):
-    try:
-        await interaction.response.send_message("Nothing settings on command")
-    except Exception as e:
-        await interaction.response.send_message("An error occurred:", e)
+intents = discord.Intents.default()
+intents.message_content = True
+bot = Bot(intents=intents)
 
-client.run(BOT_TICKETS)
+
+# write general commands here
+@bot.tree.command(name="create-embed", description="embed..")
+async def create_embed(interaction: discord.Interaction):
+    view = EmbedCreator(bot=bot)
+    await interaction.response.send_message(embed=view.get_default_embed, view=view)
+
+
+@bot.tree.command(name='ticket', description='Launches the ticketing system')   # guilds=discord.Object(id='1200955239281467422')
+async def ticketing(interaction: discord.Interaction):
+    embed = discord.Embed(title="If you need support, click the button below and create a ticket!", color=discord.Colour.blue())
+    await interaction.channel.send(embed=embed, view=ticket_launcher())
+    await interaction.response.send_message("Ticketing system launched!", ephemeral=True)
+
+bot.run(Bot_tickets)

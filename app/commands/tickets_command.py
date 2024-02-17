@@ -11,3 +11,8 @@ async def ticket_command(ctx):
 async def slash_ticket_command(ctx):
     # Твой код для создания тикета здесь
     await ctx.send('Ticket created!')
+
+@tree.command(name='tickets', help='Show all tickets')
+async def tickets_command(ctx):
+    # Твой код для показа всех тикетов здесь
+    await ctx.send('All tickets:')
