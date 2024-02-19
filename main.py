@@ -1,7 +1,6 @@
 import multiprocessing
 import os
 
-
 def run_bot(token):
     os.system(f"python {token}.py")
 

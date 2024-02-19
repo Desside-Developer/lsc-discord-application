@@ -2,7 +2,7 @@
 
 from discord.ext import commands
 import discord
-from config import Bot_moderator, moderator_cogs
+from app.bots.config import Bot_moderator, moderator_cogs
 
 
 class Bot(commands.Bot):
