@@ -1,50 +1,54 @@
 version: '3.8'
-
 services:
   tickets:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_tickets.py"
-
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_tickets.py"
+    # environment:
+    #   - DATABASE_HOST=db
+    #   - DATABASE_USER=root
+    #   - DATABASE_PASSWORD=
+    #   - DATABASE_NAME=lsc-bot-system-database
   music:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_music.py"
-
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
+    # environment:
+    #   - DATABASE_HOST=db
+    #   - DATABASE_USER=root
+    #   - DATABASE_PASSWORD=
+    #   - DATABASE_NAME=lsc-bot-system-database
   moderator:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_moderator.py"
-
-# docker compose down
-# docker compose up -d
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
+    # environment:
+    #   - DATABASE_HOST=db
+    #   - DATABASE_USER=root
+    #   - DATABASE_PASSWORD=
+    #   - DATABASE_NAME=lsc-bot-system-database
+  db:
+    image: 'mariadb:latest'
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=pass123456
+      - MYSQL_ROOT_PASSWORD=pass1234
+      - MYSQL_DATABASE=lsc-bot-system-database

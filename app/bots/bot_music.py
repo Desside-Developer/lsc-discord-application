@@ -30,10 +30,10 @@ bot = Bot(intents=intents)
 
 
 # write general commands here
-@bot.tree.command(name="create-embed", description="embed..")
-async def create_embed(interaction: discord.Interaction):
-    view = EmbedCreator(bot=bot)
-    await interaction.response.send_message(embed=view.get_default_embed, view=view)
+# @bot.tree.command(name="create-embed", description="embed..")
+# async def create_embed(interaction: discord.Interaction):
+#     view = EmbedCreator(bot=bot)
+#     await interaction.response.send_message(embed=view.get_default_embed, view=view)
 
 
 bot.run(Bot_music)
