@@ -10,11 +10,8 @@ services:
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
       sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_tickets.py"
-    # environment:
-    #   - DATABASE_HOST=db
-    #   - DATABASE_USER=root
-    #   - DATABASE_PASSWORD=
-    #   - DATABASE_NAME=lsc-bot-system-database
+    depends_on:
+      - db
   music:
     image: 'python:3.12-alpine'
     restart: unless-stopped
@@ -25,11 +22,6 @@ services:
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
       sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
-    # environment:
-    #   - DATABASE_HOST=db
-    #   - DATABASE_USER=root
-    #   - DATABASE_PASSWORD=
-    #   - DATABASE_NAME=lsc-bot-system-database
   moderator:
     image: 'python:3.12-alpine'
     restart: unless-stopped
@@ -40,15 +32,15 @@ services:
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
       sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
-    # environment:
-    #   - DATABASE_HOST=db
-    #   - DATABASE_USER=root
-    #   - DATABASE_PASSWORD=
-    #   - DATABASE_NAME=lsc-bot-system-database
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
   db:
     image: 'mariadb:latest'
     restart: always
     environment:
-      - MARIADB_ROOT_PASSWORD=pass123456
-      - MYSQL_ROOT_PASSWORD=pass1234
+      - MARIADB_ROOT_PASSWORD=
+      - MYSQL_ROOT_PASSWORD=
       - MYSQL_DATABASE=lsc-bot-system-database

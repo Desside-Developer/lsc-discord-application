@@ -4,6 +4,7 @@ from colorama import Back, Fore, Style
 import logging
 import time
 import platform
+import cogs.database.database as dbMaria
 # from dispie import EmbedCreator
 from config import Bot_tickets, tickets_cogs
 
@@ -44,7 +45,7 @@ class Client(commands.Bot):
             print(prfx + " Bot: " + Fore.YELLOW + "Bot_tickets")
             print(f"{Fore.GREEN}Бот {self.user} запущен!{Style.RESET_ALL}")
             print(f'Вошёл как {self.user} (ID: {self.user.id})')
-            # await self.tree.sync()
+            await self.tree.sync()
             # if not self.added:
             #     self.add_view(ticket_launcher())
             #     self.add_view(main())
@@ -58,10 +59,51 @@ class Client(commands.Bot):
 #         return any(role_id in user_roles for role_id in role_ids)
 #     return commands.check(predicate)
 
+# MariaDB Save-all roles on guild
+# Пример вставки данных
+# data_to_insert = {'user_id': '123', 'image': b'\x89PNG\r\n\x1a\n...', 'text_message': 'Hello, World!'}
+# db_manager.insert_data('new_table', data_to_insert)
+
+
 Client = Client()
 # Command's next
+"""
+Slash Commands Next: //
+help
+"""
+# @Client.tree.command(name="create-database", description="Создание таблицы в базе-данных")
+# @commands.has_permissions(administrator=True)
+# async def save_image(interaction: discord.Interaction):
+#     await interaction.response.send_message(f'Создание таблицы в базе-данных')
+#     db_manager = dbMaria.MariaDBManager(user='root', password='', host='localhost', database='lsc-bot-system-database')
+#     columns = {'id': 'INT AUTO_INCREMENT PRIMARY KEY', 'user_id': 'VARCHAR(255)', 'image': 'BLOB', 'text_message': 'TEXT'}
+#     db_manager.create_table('new_table', columns)
 
 
+# @Client.tree.command(name="execute-sql", description="admin")
+# async def command_permissions(interaction: discord.Interaction):
+#     await interaction.response.send_message(f'Даем разрешение на команду')
+#     db_manager = dbMaria.MariaDBManager(user='root', password='', host='localhost', database='lsc-bot-system-database')
+#     db_manager.execute_all_sql_files_in_subfolder('sql-data')
+
+
+# @Client.tree.command(name="save-roles", description="Сохранение ролей")
+# @commands.has_permissions(administrator=True)
+# async def save_roles(interaction: discord.Interaction):
+#     guild = interaction.guild
+#     db_manager = dbMaria.MariaDBManager(user='root', password='', host='localhost', database='lsc-bot-system-database')
+#     db_manager.delete_all_data('roles')
+#     for role in guild.roles:
+#         db_manager.insert_data('roles', data={'role_id': str(role.id), 'role_name': role.name})
+#     await interaction.response.send_message("Роли сохранены в базе данных.")
+
+
+# @Client.tree.command(name="get-guilds", description="Displays information about the bot's guilds")
+# async def get_guilds(interaction: discord.Interaction):
+#     # Check if the bot has the 'View Members' permission in the current guild
+#     if not (await commands.member_has_permissions(interaction.guild, interaction.user, view_members=True)):
+#         await interaction.response.send_message("I don't have permission to view guild members! Please grant me the 'View Members' permission.")
+#         return
 
 """
 Events Next: //
@@ -125,6 +167,27 @@ async def on_member_join(member: discord.Member):
     except Exception as e:
         print(f'Ошибка при обработке события on_member_join: {e}')
 # ---------------------------------------------
+@Client.event
+async def message_event(member: discord.Member):
+    try:
+        channel = member.guild.get_channel(1207710865202221076)
+        if channel:
+            await channel.send(f'```Индентификатор:{member.id}``` ```Имя пользователя:{member.name}``` ```Присоединился:{member.joined_at}``` Аватар:{member.avatar}!')
+            role = member.guild.get_role(1204254987396448287)
+            if role:
+                await member.add_roles(role)
+                print(f'Участнику {member.name} присвоена роль {role.name}.')
+            else:
+                print('Указанная роль не найдена.')
+        else:
+            print('Указанный канал не найден.')
+    except Exception as e: discord.message
+
+async def on_guild_join(guild: discord.Guild):
+    print(f"Бот присоединился к серверу {guild.name} (ID: {guild.id})")
+    print(f"Количество участников: {len(guild.members)}")
+    print(f"Количество каналов: {len(guild.channels)}")
+    print(f"Количество ролей: {len(guild.roles)}")
 #  ========================
 """Start Client"""
 Client.run(Bot_tickets)
