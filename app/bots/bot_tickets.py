@@ -5,6 +5,7 @@ import logging
 import time
 import platform
 import cogs.database.database as dbMaria
+from dispie import EmbedCreator
 # from dispie import EmbedCreator
 from config import Bot_tickets, tickets_cogs
 
@@ -21,7 +22,7 @@ print = CustomLogging().log
 class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('!'), intents=discord.Intents.all())
-        self.cogslist = ["cogs.ticket_system"]
+        self.cogslist = ["cogs.ticket_system", "cogs.add_role_system", "cogs.ember_creator_system"]
         # self.synced = False #we use this so the bot doesn't sync commands more than once
         # self.added = False
     async def setup_hook(self) -> None:
@@ -46,6 +47,7 @@ class Client(commands.Bot):
             print(f"{Fore.GREEN}Бот {self.user} запущен!{Style.RESET_ALL}")
             print(f'Вошёл как {self.user} (ID: {self.user.id})')
             await self.tree.sync()
+            await self.setup_hook()
             # if not self.added:
             #     self.add_view(ticket_launcher())
             #     self.add_view(main())
@@ -71,6 +73,10 @@ Client = Client()
 Slash Commands Next: //
 help
 """
+@Client.tree.command(name="embed", description="embed")
+async def embed(interaction: discord.Interaction):
+    view = EmbedCreator(bot=Client)
+    await interaction.response.send_message(embed=view.get_default_embed, view=view)
 # @Client.tree.command(name="create-database", description="Создание таблицы в базе-данных")
 # @commands.has_permissions(administrator=True)
 # async def save_image(interaction: discord.Interaction):
@@ -182,7 +188,7 @@ async def message_event(member: discord.Member):
         else:
             print('Указанный канал не найден.')
     except Exception as e: discord.message
-
+@Client.event
 async def on_guild_join(guild: discord.Guild):
     print(f"Бот присоединился к серверу {guild.name} (ID: {guild.id})")
     print(f"Количество участников: {len(guild.members)}")
