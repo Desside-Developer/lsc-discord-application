@@ -1,6 +1,6 @@
 import discord
 
-class check_role_on_user(required_role_ids):
+class check_role_on_user():
     def __init__(self, required_role_ids: list[int]):
         self.required_role_ids = required_role_ids
     def has_at_least_one_required_role(required_role_ids):
