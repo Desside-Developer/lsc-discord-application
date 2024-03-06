@@ -1,50 +1,46 @@
 version: '3.8'
-
 services:
   tickets:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_tickets.py"
-
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_tickets.py"
+    depends_on:
+      - db
   music:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_music.py"
-
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
   moderator:
-    image: python:3.12-alpine
+    image: 'python:3.12-alpine'
     restart: unless-stopped
-
     working_dir: /code
     volumes:
-      - .\\app:/code/app
-      - .\\main.py:/code/main.py
-      - .\\requirements.txt:/code/requirements.txt
-
-    command: >
-       sh -c "pip install --upgrade pip &&
-       pip install --no-cache-dir --upgrade -r requirements.txt &&
-       python app/bots/bot_moderator.py"
-
-# docker compose down
-# docker compose up -d
+      - '.\\app:/code/app'
+      - '.\\main.py:/code/main.py'
+      - '.\\requirements.txt:/code/requirements.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+  db:
+    image: 'mariadb:latest'
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_DATABASE=lsc-bot-system-database
