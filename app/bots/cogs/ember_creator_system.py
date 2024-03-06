@@ -1,5 +1,6 @@
 import discord
 import json
+import os
 from discord.ext import commands
 from colorama import Back, Fore, Style
 from discord import app_commands, utils
@@ -23,6 +24,7 @@ class embed_system(commands.Cog):
     async def embed_ticket_system_report(self, interaction: discord.Interaction):
         embed_main = discord.Embed(title="👋🞄 Добро-Пожаловать!", description="Тут вы можете завести новый тикет, для репортов.", color=discord.Colour.dark_red())
         embed_main.set_author(name="📌🞄 Ticket System Report", icon_url=interaction.user.avatar.url)
+        embed_main.set_image(url="https://i.imgur.com/8txHSse.png")
         embed_main.set_footer(text="---")
         await interaction.response.send_message("Ready", ephemeral=True)
         await interaction.channel.send(embed=embed_main)
@@ -57,9 +59,11 @@ class embed_system(commands.Cog):
                         # print("Информация о количестве игроков недоступна.")
                 else:
                     print(f"Ошибка при запросе: {response.status_code}")
-
+                    
+                    
                 # Обновляем embed с информацией о сервере
-                embed = discord.Embed(title="👋🞄 Arizona Liberty!", description="---", color=discord.Colour.yellow())
+                embed = discord.Embed(title="👋🞄 Arizona Liberty!", description="---", color=discord.Colour.light_grey())
+                embed.set_image(url="https://i.imgur.com/DG9y5ZS.png")
                 embed.add_field(name="Игроков онлайн:", value=f"{players_count}", inline=True)
                 embed.add_field(name="Оффициальная ссылка:", value=f"{host_url}", inline=True)
                 embed.add_field(name="Макс игроков:", value=f"{max_players_count}", inline=False)

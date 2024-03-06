@@ -1,10 +1,12 @@
 import discord
+from discord import File
 from discord.ext import commands
 from colorama import Back, Fore, Style
 import logging
 import time
 import platform
 import cogs.database.database as dbMaria
+from easy_pil import Editor, load_image_async, Font
 from dispie import EmbedCreator
 # from dispie import EmbedCreator
 from config import Bot_tickets, tickets_cogs
@@ -158,6 +160,24 @@ on_scheduled_event_user_add,
 @Client.event
 # ---------------------------------------------
 async def on_member_join(member: discord.Member):
+    channel = member.guild.get_channel(1214952893271248946)
+    
+    background = Editor('app/bots/Reports-banner.png')
+    profile_image = await load_image_async(str(member.avatar.url))
+    
+    profile = Editor(profile_image).resize((150, 150)).circle_image()
+    popping = Font.poppins(size=50, variant="bold")
+    poppins_small = Font.poppins(size=20, variant="light")
+    
+    background.paste(profile, (325, 90))
+    background.ellipse((325, 90), 150, 150, outline=None, stroke_width=5)
+    
+    background.text((450, 160), member.name, color="white", font=popping)
+    background.text((450, 200), str(member.id), color="white", font=poppins_small)  # Convert member.id to string
+    
+    file = File(fp=background.image_bytes, filename="https://i.imgur.com/8txHSse.png")
+    await channel.send(file=file)
+
     try:
         channel = member.guild.get_channel(1207710865202221076)
         if channel:
