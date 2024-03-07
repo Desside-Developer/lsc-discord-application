@@ -24,7 +24,7 @@ print = CustomLogging().log
 class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('!'), intents=discord.Intents.all())
-        self.cogslist = ["cogs.ticket_system", "cogs.add_role_system", "cogs.ember_creator_system"]
+        self.cogslist = ["cogs.ticket_system", "cogs.add_role_system", "cogs.ember_creator_system", "cogs.database_system"]
         # self.synced = False #we use this so the bot doesn't sync commands more than once
         # self.added = False
     async def setup_hook(self) -> None:
@@ -56,17 +56,6 @@ class Client(commands.Bot):
             #     self.added = True
         except Exception as e:
             print(f"{Fore.RED}Error logging in as {self.user}: {e}{Style.RESET_ALL}")
-
-# def has_specific_roles(*role_ids):
-#     async def predicate(ctx):
-#         user_roles = [role.id for role in ctx.author.roles]
-#         return any(role_id in user_roles for role_id in role_ids)
-#     return commands.check(predicate)
-
-# MariaDB Save-all roles on guild
-# Пример вставки данных
-# data_to_insert = {'user_id': '123', 'image': b'\x89PNG\r\n\x1a\n...', 'text_message': 'Hello, World!'}
-# db_manager.insert_data('new_table', data_to_insert)
 
 
 Client = Client()

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from colorama import Back, Fore, Style
 from discord import app_commands, utils
-import cogs.database.database as dbMaria
+from cogs.database.database import MySQLConnectorManager as DBMaria # База данных MariaDB
 
 import logging
 print = logging.info

@@ -12,7 +12,16 @@ class check_role_on_user():
             return False
         return discord.app_commands.checks.check(predicate)
     
-    
+class check_user_on_owner():
+    def __init__(self, owner_id: int):
+        self.owner_id = owner_id
+    def has_owner_id(owner_id):
+        async def predicate(interaction: discord.Interaction):
+            if interaction.user.id == owner_id:
+                return True
+            await interaction.response.send_message("У вас недостаточно прав для использования этой команды.", ephemeral=True)
+            return False
+        return discord.app_commands.checks.check(predicate)
     
 
 # def has_at_least_one_required_role(required_role_ids):
