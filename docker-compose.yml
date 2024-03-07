@@ -12,35 +12,37 @@ services:
       sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_tickets.py"
     depends_on:
       - db
-  music:
-    image: 'python:3.12-alpine'
-    restart: unless-stopped
-    working_dir: /code
-    volumes:
-      - '.\\app:/code/app'
-      - '.\\main.py:/code/main.py'
-      - '.\\requirements.txt:/code/requirements.txt'
-    command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
-  moderator:
-    image: 'python:3.12-alpine'
-    restart: unless-stopped
-    working_dir: /code
-    volumes:
-      - '.\\app:/code/app'
-      - '.\\main.py:/code/main.py'
-      - '.\\requirements.txt:/code/requirements.txt'
-    command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
+  # music:
+  #   image: 'python:3.12-alpine'
+  #   restart: unless-stopped
+  #   working_dir: /code
+  #   volumes:
+  #     - '.\\app:/code/app'
+  #     - '.\\main.py:/code/main.py'
+  #     - '.\\requirements.txt:/code/requirements.txt'
+  #   command: |
+  #     sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
+  # moderator:
+  #   image: 'python:3.12-alpine'
+  #   restart: unless-stopped
+  #   working_dir: /code
+  #   volumes:
+  #     - '.\\app:/code/app'
+  #     - '.\\main.py:/code/main.py'
+  #     - '.\\requirements.txt:/code/requirements.txt'
+  #   command: |
+  #     sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
   adminer:
     image: adminer
     restart: unless-stopped
     ports:
       - '8080:8080'
+    depends_on:
+      - tickets
   db:
-    image: 'mariadb:latest'
+    image: 'mariadb'
     restart: always
     environment:
-      - MARIADB_ROOT_PASSWORD=
-      - MYSQL_ROOT_PASSWORD=
+      - MARIADB_ROOT_PASSWORD=pass12345
+      - MYSQL_ROOT_PASSWORD=pass12345
       - MYSQL_DATABASE=lsc-bot-system-database
