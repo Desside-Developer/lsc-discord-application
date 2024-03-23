@@ -1,46 +1,37 @@
 version: '3.8'
 services:
-  tickets:
+  bot:
     image: 'python:3.12-alpine'
     restart: unless-stopped
     working_dir: /code
     volumes:
       - '.\\app:/code/app'
-      - '.\\main.py:/code/main.py'
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_tickets.py"
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/main.py"
     depends_on:
       - db
-  # music:
-  #   image: 'python:3.12-alpine'
-  #   restart: unless-stopped
-  #   working_dir: /code
-  #   volumes:
-  #     - '.\\app:/code/app'
-  #     - '.\\main.py:/code/main.py'
-  #     - '.\\requirements.txt:/code/requirements.txt'
-  #   command: |
-  #     sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_music.py"
-  # moderator:
-  #   image: 'python:3.12-alpine'
-  #   restart: unless-stopped
-  #   working_dir: /code
-  #   volumes:
-  #     - '.\\app:/code/app'
-  #     - '.\\main.py:/code/main.py'
-  #     - '.\\requirements.txt:/code/requirements.txt'
-  #   command: |
-  #     sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/bot_moderator.py"
   adminer:
     image: adminer
     restart: unless-stopped
     ports:
       - '8080:8080'
     depends_on:
-      - tickets
+      - bot
+  fastapi:
+    ports:
+      - '127.0.0.1:4547:3537'
+    image: 'python:3.12-alpine'
+    restart: unless-stopped
+    working_dir: /code
+    volumes:
+      - '.\\api:/code/api'
+      - '.\\app:/code/app'
+      - '.\\requirements-fastapi.txt:/code/requirements-fastapi.txt'
+    command: |
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements-fastapi.txt && uvicorn api.main:app --host 0.0.0.0 --port 3537 --reload"
   db:
-    image: 'mariadb'
+    image: mariadb
     restart: always
     environment:
       - MARIADB_ROOT_PASSWORD=pass12345
