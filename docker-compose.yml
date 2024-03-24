@@ -29,7 +29,7 @@ services:
       - '.\\app:/code/app'
       - '.\\requirements-fastapi.txt:/code/requirements-fastapi.txt'
     command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements-fastapi.txt && uvicorn api.main:app --host 0.0.0.0 --port 3537 --reload"
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements-fastapi.txt && uvicorn api.fastapi:app --host 0.0.0.0 --port 3537 --reload"
   db:
     image: mariadb
     restart: always

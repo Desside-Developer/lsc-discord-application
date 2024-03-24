@@ -64,6 +64,18 @@ class MySQLConnectorManager:
         self.db_mysql_connector.commit()
         return self.cursor.lastrowid
 
+    def insert_tickets_data(self, ticket_id, user_id, status, channel_id, message_id, created_at, closed_at=None):
+        query = f"INSERT INTO tickets (ticket_id, user_id, status, channel_id, message_id, created_at, closed_at) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(query, (ticket_id, user_id, status, channel_id, message_id, created_at, closed_at))
+        self.db_mysql_connector.commit()
+        return self.cursor.lastrowid
+
+    def insert_assignment(self, assignment_id, ticket_id, user_id, assigned_at):
+        query = f"INSERT INTO assigned_tickets (assignment_id, ticket_id, user_id, assigned_at) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(query, (assignment_id, ticket_id, user_id, assigned_at))
+        self.db_mysql_connector.commit()
+        return self.cursor.lastrowid
+
     def update_data(self, table_name, new_data, condition_column, condition_value):
         columns = ', '.join(f"{column} = %s" for column in new_data)
         query = f"UPDATE {table_name} SET {columns} WHERE {condition_column} = %s;"
@@ -79,7 +91,7 @@ class MySQLConnectorManager:
     def get_data_by_condition(self, table_name, condition_column, condition_value):
         self.cursor.execute(f"SELECT * FROM {table_name} WHERE {condition_column} = %s", (condition_value,))
         rows = self.cursor.fetchall()
-        columns = [column[0] for column in self.cursor.description]  # Получаем названия столбцов
+        columns = [column[0] for column in self.cursor.description]
         results = []
         for row in rows:
             results.append(dict(zip(columns, row)))
@@ -122,14 +134,23 @@ class MySQLConnectorManager:
         sql_files_path = os.path.join(current_directory, subfolder)
         for filename in os.listdir(sql_files_path):
             if filename.endswith('.sql'):
+                table_name = os.path.splitext(filename)[0]
                 with open(os.path.join(sql_files_path, filename), 'r', encoding='utf-8') as file:
                     queries = file.read().split(';')
                     for query in queries:
                         query = query.strip()
                         if query:
-                            self.cursor.execute(query)
-                            self.db_mysql_connector.commit()
-                            print(f"Executed '{filename}' successfully.")
+                            try:
+                                self.cursor.execute(query)
+                                self.db_mysql_connector.commit()
+                                print(f"Executed '{table_name}' successfully.")
+                            except mysql.connector.Error as err:
+                                if err.errno == 1050: 
+                                    print(f"Table '{table_name}' already exists, skipping.")
+                                elif err.errno == 1005:
+                                    print(f"Error creating table '{table_name}': {err}")
+                                else:
+                                    print(f"An unexpected error occurred: {err}")
     
     def execute_all_sql_files_in_sql_dates(self, subfolder: str, subsql: str):
         current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -165,38 +186,3 @@ class MySQLConnectorManager:
 
 
 dbMaria = MySQLConnectorManager()
-
-
-# async def check_user(id, user_name):
-#     user = dbMaria.get_data_by_condition('users', condition_column='user_id',condition_value=id)
-#     if user == []:
-#         user_id = id
-#         unique_id = generate_unique_token()
-#         username = user_name
-#         balance = 0
-#         on_joined = datetime.datetime.now()
-#         inventory = {}
-#         dbMaria.insert_user_data(user_id, unique_id, username, balance, on_joined, json.dumps(inventory))
-#         return True
-#     else:
-#         return False
-
-# async def get_user_by_id(id):
-#     user = dbMaria.get_data_by_condition('users', condition_column='user_id', condition_value=id)
-#     return user[0]
-
-# async def save_user_to_database(id):
-#     dbMaria.insert_data('users', user_id=id)
-
-# async def check_user_tags(id):
-#     user = dbMaria.get_data_by_condition('tags_users', condition_column='user_id', condition_value=id)
-#     if user == []:
-#         return False
-#     else:
-#         return True
-
-# async def save_user_tags(id, name_second):
-#     user_id = id
-#     data_register = datetime.datetime.now()
-#     dbMaria.insert_user_tags(user_id, name_second, data_register)
-#     return await get_user_by_id(id)

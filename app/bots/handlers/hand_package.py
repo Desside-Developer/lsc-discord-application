@@ -1,7 +1,11 @@
 import datetime
 import json
+import logging
 
-from .generate.unique_token import generate_unique_token
+print = logging.info
+
+from colorama import Back, Fore, Style
+from .generate.unique_token import generate_unique_token, generate_ticket_token
 from database.database import dbMaria
 
 async def check_user(id, user_name):
@@ -43,3 +47,19 @@ async def save_user_tags(id, name_second):
     data_register = datetime.datetime.now()
     dbMaria.insert_user_tags(user_id, name_second, data_register)
     return await get_user_by_id(id)
+
+async def check_name_second(name_second):
+    user = dbMaria.get_data_by_condition('tags_users', condition_column='name_second', condition_value=name_second)
+    if user == []:
+        return False
+    else:
+        return True
+
+async def save_ticket_for_table(ticket_id, user_id, status, channel_id, message_id, created_at):
+    try:
+        dbMaria.insert_tickets_data(ticket_id, user_id, status, channel_id, message_id, created_at)
+        print(f"{Fore.RED}{ticket_id} {Fore.YELLOW}created ticket: {Fore.GREEN}tickets{Fore.RESET}")
+        return True
+    except Exception as e:
+        print(f"Error saving ticket to database: {e}")
+        return False

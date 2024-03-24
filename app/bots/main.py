@@ -9,6 +9,7 @@ import discord
 import platform
 import time
 import logging
+import asyncio
 
 from colorama import Back, Fore, Style
 
@@ -35,9 +36,10 @@ class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('!'), intents=discord.Intents.all())
         self.cogslist = [
-            "logs.logging",
             "commands.system_start",
-            "commands.database_system"
+            "commands.database_system",
+            "tickets.ticket_report",
+            "logs.logging"
             # "cogs.ticket_system",
             # "cogs.add_role_system",
             # "cogs.ember_creator_system",
@@ -63,10 +65,22 @@ class Client(commands.Bot):
             print(prfx + " Bot: " + Fore.YELLOW + "Bot_tickets")
             print(f"{Fore.GREEN}Бот {self.user} запущен!{Style.RESET_ALL}")
             print(f'Вошёл как {self.user} (ID: {self.user.id})')
-            # if not self.added:
-            #     self.add_view(ticket_launcher())
-            #     self.add_view(main())
-            #     self.added = True
+            Embed = discord.Embed(title="🚀° Bot Info", description=
+            f"""
+            ``Bot``: **Запущен**
+            ``Logged in as``: **{self.user.name}**
+            ``ID``: **{str(self.user.id)}**
+            ``Version``: **{str(discord.__version__)}**
+            ``Platform``: **{platform.system()}**
+            ``Python``: **{platform.python_version()}**
+            ``Discord.py``: **{discord.__version__}**
+            """, color=0x77eb34)
+            Embed.set_thumbnail(url="https://i.imgur.com/J60RRnz.png")
+            user = self.get_user(960251916762378241)
+            if user:
+                await user.send(embed=Embed)
+            else:
+                logging.error(f"Admin user with ID {960251916762378241} not found.")
         except Exception as e:
             print(f"{Fore.RED}Error logging in as {self.user}: {e}{Style.RESET_ALL}")
 
@@ -78,8 +92,11 @@ help
 """
 
 
-
-
+@Client.tree.command(name="stop", description="stop")
+async def stop_bot(interaction: discord.Interaction):
+    if interaction.user.id == 960251916762378241:
+        await interaction.response.send_message(f'Завершение бота')
+        await Client.close()
 @Client.tree.command(name="embed", description="embed")
 async def embed(interaction: discord.Interaction):
     view = EmbedCreator(bot=Client)

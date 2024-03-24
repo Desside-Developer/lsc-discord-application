@@ -38,7 +38,7 @@ async def setup(client: commands.Bot) -> None:
     cogs = [database_system]
     for cog in cogs:
         try:
-            await client.add_cog(cog(client))
+            await client.add_cog(cog(client), guilds=[discord.Object(id=1200955239281467422)])
             print(f"{Fore.GREEN}Cog '{Fore.RED}database_system{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
         except Exception as e:
             print(f"{Fore.RED}Error adding cog '{Fore.RED}database_system{Fore.GREEN}': {e}{Style.RESET_ALL}")

@@ -5,11 +5,11 @@ from discord.ext import commands
 from colorama import Back, Fore, Style
 from discord import app_commands, utils
 from discord.ui import View, Button
-from app.bots.database.database import dbMaria
-import config 
+from database.database import dbMaria
+from handlers.hand_package import save_ticket_for_table, generate_ticket_token, check_user
+import config
 import logging
-from unicodedata import category
-import asyncio
+print = logging.info
 
 class ticket_system_report(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -49,6 +49,7 @@ class create_ticket_reports(View):
     @discord.ui.button(label="Создать тикет", style=discord.ButtonStyle.green, custom_id="ticket_button_report", emoji="🎟")
     @app_commands.checks.has_permissions(send_messages=True)
     async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await check_user(id=interaction.user.id, user_name=interaction.user.name)
         modal_windows = await interaction.response.send_modal(modal_window_ticket_system_report())
         if modal_windows is None:
             print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
@@ -78,27 +79,25 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
         channel = await interaction.guild.create_text_channel(f"report-{interaction.user.name}-{interaction.user.id}", category=by_category, overwrites=overwrites, reason=f"Тикеты {interaction.user}")
         print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
         if channel.category is not None:
-            embed_ticket_player = discord.Embed(title=f"Тикет ID:``{channel.id}``", description=f"----", color= discord.Colour.blue())
-            embed_ticket_player.add_field(name=f"Канал: {channel.mention}", value="")
-            embed_ticket_player.add_field(name=f"Проблема", value=f"{self.problem}", inline=False)
-            embed_ticket_player.add_field(name=f"Подробное описание", value=f"{self.description_problem}", inline=False)
-            message_id = await channel.send(f"{interaction.user.mention}",embed=embed_ticket_player)
-            embed_message_control_tickets = discord.Embed(title=f"Тикет ID:``{channel.id}``", description=f"{interaction.user.mention} создал тикет - по репортам")
-            embed_message_control_tickets.add_field(name=f"Где находится : ", value=f"Канал: {channel.mention}")
+            token_ticket = generate_ticket_token()
+            embed_ticket_player = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"", color= discord.Colour.blue())
+            embed_ticket_player.add_field(name=f"📃 ⭑ Канал: {channel.mention}", value="")
+            embed_ticket_player.add_field(name=f"📒 ⭑ Проблема", value=f"{self.problem}", inline=False)
+            embed_ticket_player.add_field(name=f"📊 ⭑ Подробное описание", value=f"{self.description_problem}", inline=False)
+            await channel.send(f"{interaction.user.mention}",embed=embed_ticket_player)
+            embed_message_control_tickets = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"{interaction.user.mention} создал тикет - по репортам 📢")
+            embed_message_control_tickets.add_field(name=f"🔑 ⭑ Где находится : ", value=f"""
+📋 ⭑ Канал: {channel.mention}
+📞 ⭑ Имя Пользователя: **{interaction.user.name}**
+🎙 ⭑ Айди Пользователя: ``{interaction.user.id}``
+🔔 ⭑ Упоминалка Данного пользователя: {interaction.user.mention}
+""")
             control_message = interaction.guild.get_channel(config.ticket_system_report_channel_request)
             message_id_control = await control_message.send(embed=embed_message_control_tickets, view=buttons_on_control_ticket_by_moderator())
-            data = {
-                "chat_id": channel.id,
-                "message_id_control_panel": message_id_control.id,
-                "message_id": message_id.id,
-                "user_name": interaction.user.name,
-                "user_id": interaction.user.id,
-                "data_create_ticket": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            sync_database = await save_ticket_create(data=data,table_name="tickets")
+            sync_database = await save_ticket_for_table(ticket_id=token_ticket, user_id=interaction.user.id, status="New", channel_id=channel.id, message_id=message_id_control.id, created_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             if sync_database is False:
                 print(f"Error saving ticket to database: {sync_database}")
-                return await interaction.response.send_message("Ошибка при сохранении тикета в базу данных!", ephemeral=True)
+                return await interaction.response.send_message("Ошибка сервера!", ephemeral=True)
             else:
                 # await interaction.user.send(embed=embed_ticket_player)
                 await interaction.response.send_message("Тикет создан!", ephemeral=True)
@@ -110,8 +109,7 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
 class buttons_on_control_ticket_by_moderator(View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.plus_button_clicked_by_user = False
-    @discord.ui.button(label="Информация", style=discord.ButtonStyle.gray, custom_id="ticket_button_info", emoji="🌎")
+    @discord.ui.button(label="Жалоба", style=discord.ButtonStyle.gray, custom_id="ticket_button_info", emoji="📌")
     @app_commands.checks.has_permissions(administrator=True)
     async def info_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
@@ -120,77 +118,80 @@ class buttons_on_control_ticket_by_moderator(View):
         except Exception as e:
             print(f"Error touch button: {e}")
             return await interaction.response.send_message("Ошибка при нажатии на кнопку!", ephemeral=True)
-    @discord.ui.button(label="Принять", style=discord.ButtonStyle.green, custom_id="ticket_button_consideration", emoji="🗡")
+    @discord.ui.button(label="Принять", style=discord.ButtonStyle.green, custom_id="ticket_button_consideration", emoji="✅")
     @app_commands.checks.has_permissions(administrator=True)
-    async def consideration_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def consideration_ticket(self, interaction: discord.Interaction, button: discord.ui.button):
         try:
-            if not self.plus_button_clicked_by_user:
-                self.plus_button_clicked_by_user = True
-                ticket_data = dbMaria.get_data_by_condition(condition_column='message_id_control_panel', condition_value=interaction.message.id, table_name='tickets')
-                self.db_manager.update_data('tickets', new_data={
-                    'user_moderator_id': interaction.user.id,
-                    'user_moderator_name': interaction.user.name, 
-                    'data_open_ticket': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    }, condition_column='message_id_control_panel', condition_value=interaction.message.id)  
-                button.disabled = True  # Устанавливаем состояние кнопки как отключенную
-                await interaction.response.defer_update()  # Отложенное обновление для отображения отключенной кнопки
-                if ticket_data:
-                    message_id_str = ticket_data[0][1]
-                    message_id_int = int(message_id_str)
-                    channel_id = message_id_int
-                    channel = interaction.guild.get_channel(channel_id)
-                    if channel:
-                        embed_control = discord.Embed(title="Тикет рассматривается", description=f"Куратор: <@{interaction.user.id}> канал: {interaction.channel.mention}", color=discord.Colour.dark_grey())
-                        await channel.send(embed=embed_control, view=control_ticket_system_users()) # view=buttons_control_ticket()
-                        await interaction.response.send_message(f"(id) - Тикет рассматривается {interaction.user.mention}!", ephemeral=True)
-                        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}consideration ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
-                    else:
-                        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}channel not found: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+            await check_user(id=interaction.user.id, user_name=interaction.user.name)
+            user = dbMaria.get_data_by_condition(condition_column='user_id', table_name='users', condition_value=interaction.user.id); user = user[0]
+            self.plus_button_clicked_by_user = True
+            ticket_data = dbMaria.get_data_by_condition(condition_column='message_id', condition_value=interaction.message.id, table_name='tickets')
+            if ticket_data == []:
+                return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
+            ticket_data = ticket_data[0]
+            print(ticket_data)
+            user_assignment = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=ticket_data['ticket_id'], table_name='assigned_tickets')
+            print(user_assignment)
+            if user_assignment == []:
+                await interaction.response.send_message("Вам будет присвоен новый тикет!", ephemeral=True)
+                channel_id = int(ticket_data['channel_id'])
+                print(channel_id)
+                channel = interaction.guild.get_channel(channel_id)
+                await channel.set_permissions(interaction.user, read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
+                if channel:
+                    embed_control = discord.Embed(title="Тикет рассматривается", description=f"Куратор: <@{interaction.user.id}> канал: {interaction.channel.mention}", color=discord.Colour.dark_grey())
+                    assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users()) # view=buttons_control_ticket()
+                    dbMaria.insert_assignment(assigned_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ticket_id=ticket_data['ticket_id'], user_id=interaction.user.id, assignment_id=assigned_message.id)
+                    print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}accept ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
                 else:
-                    await interaction.response.send_message(f"Не удалось получить данные о тикете из базы данных!", ephemeral=True)
+                    print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}channel not found: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
             else:
-                await interaction.response.send_message(f"Тикет уже рассматривается!", ephemeral=True)
+                return await interaction.response.send_message("Тикет уже забрали!")
         except Exception as e:
             print(f"Error touch button: {e}")
             return await interaction.response.send_message("Ошибка при нажатии на кнопку!", ephemeral=True)
 
-
+client_control = None
 class control_ticket_system_users(View):
     def __init__(self):
         super().__init__(timeout=None)
-        self.db_manager = dbMaria()
-    @discord.ui.button(label="Закрыть тикет!", style=discord.ButtonStyle.red, custom_id="control_system_ticket_close")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def close_ticket_user(self, interaction: discord.Interaction, button: discord.ui.Button):
-        user = self.db_manager.get_data_by_condition(condition_column='chat_id', condition_value=interaction.channel.id, table_name='tickets')
-        user_id_str = user[0][6]
-        user_id_int = int(user_id_str)
-        if user_id_int != interaction.user.id:
-            await interaction.response.send_message(f"У вас нет прав закрыть этот тикет!", ephemeral=True)
-        else:
-            await interaction.channel.delete()
+    @discord.ui.button(label="Закрыть тикет!", style=discord.ButtonStyle.red, custom_id="control_system_ticket_close", emoji="🧨")
+    async def close_ticket_user(self, interaction: discord.Interaction, button: discord.ui.button):
+        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets'); user = user[0]
+        if user:
+            channel_data = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=user['ticket_id'], table_name='tickets'); channel_data = channel_data[0]
+            if channel_data['channel_id'] == None:
+                return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
+            await client_control.client.get_channel(int(channel_data['channel_id'])).delete()
+            await interaction.message.delete()
             await interaction.response.send_message(f"Тикет закрыт!", ephemeral=True)
             print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}close ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+        else:
+            await interaction.response.send_message(f"Нету информации о тикете!", ephemeral=True)
+    @discord.ui.button(label="Информация о тикете", style=discord.ButtonStyle.grey, custom_id="control_system_ticket_info", emoji="🧮")
+    async def info_ticket_user(self, interaction: discord.Interaction, button: discord.ui.button):
+        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets'); user = user[0]
+        if user:
+            channel_data = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=user['ticket_id'], table_name='tickets'); channel_data = channel_data[0]
+            if channel_data['channel_id'] == None:
+                return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
+            Embed = discord.Embed(title='📓 ⭑ Информация о тикете', description="""""", color=0xffffff)
+            await interaction.response.send_message(embed=Embed, ephemeral=True)
+        else:
+            await interaction.response.send_message(f"Нету информации о тикете!", ephemeral=True)
 
-
-
-async def save_ticket_create(data: dict, table_name: str) -> None:
-    try:
-        response_database = await dbMaria.insert_data(table_name, data)
-        print(f"{Fore.RED}{data['user_id']} {Fore.YELLOW}created ticket: {Fore.GREEN}{table_name}{Fore.RESET}")
-        return {"success": True, "error": None}
-    except Exception as e:
-        print(f"Error saving ticket to database: {e}")
-        return {"success": False, "error": str(e)}
 
 """
 - Setup Cogs ->
 """
 async def setup(client: commands.Bot) -> None:
-    cogs = [ticket_system_report]
-    for cog in cogs:
-        try:
-            await client.add_cog(cog(client), guilds=[discord.Object(id=1200955239281467422)])
-            print(f"{Fore.GREEN}Cog '{Fore.RED}{cog}{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
-        except Exception as e:
-            print(f"{Fore.RED}Error adding cog '{Fore.RED}{cog}{Fore.GREEN}': {e}{Style.RESET_ALL}")
+    global client_control
+    try:
+        client_control = ticket_system_report(client)
+        client.add_view(control_ticket_system_users())
+        client.add_view(buttons_on_control_ticket_by_moderator())
+        client.add_view(create_ticket_reports())
+        await client.add_cog(ticket_system_report(client), guilds=[discord.Object(id=1200955239281467422)])
+        print(f"{Fore.GREEN}Cog '{Fore.RED}ticket_report{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}Error adding cog '{Fore.RED}ticket_report{Fore.GREEN}': {e}{Style.RESET_ALL}")

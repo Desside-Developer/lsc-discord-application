@@ -7,7 +7,7 @@ from discord.ext import commands
 from colorama import Back, Fore, Style
 
 from database.database import dbMaria
-from handlers.hand_package import check_user, check_user_tags, save_user_tags
+from handlers.hand_package import check_user, check_user_tags, save_user_tags, check_name_second
 from logs.logging import logs_responde
 
 print = logging.info
@@ -54,20 +54,22 @@ class system_start_view(View):
 class modal_window_replace_name(discord.ui.Modal, title="📌🞄 заполните пункты"):
     name = discord.ui.TextInput(label="Ваше имя:", placeholder="пример: John", style=discord.TextStyle.paragraph)
     second = discord.ui.TextInput(label="Ваша фамилия:", placeholder="пример: William", style=discord.TextStyle.paragraph)
-    
     async def on_submit(self, interaction: discord.Interaction):
         name_second = f"{self.name.value} {self.second.value}"
+        name_second_response = await check_name_second(name_second=name_second)
+        if name_second_response == True:
+            return await interaction.response.send_message("Такое имя уже есть!", ephemeral=True)
         user_data = await save_user_tags(id=interaction.user.id, name_second=name_second)
         await logs_responde.auth_users(user_data)
         print(f"""
-            {Fore.RED}( System_Auth )
-            user_id: {user_data['user_id']}
-            unique_id: {user_data['unique_id']}
-            username: {user_data['username']}
-            balance: {user_data['balance']}
-            on_joined: {user_data['on_joined']}
-            inventory: {user_data['inventory']}
-            """)
+{Fore.RED}( System_Auth )
+user_id: {user_data['user_id']}
+unique_id: {user_data['unique_id']}
+username: {user_data['username']}
+balance: {user_data['balance']}
+on_joined: {user_data['on_joined']}
+inventory: {user_data['inventory']}
+""")
         try:
             user = await interaction.guild.fetch_member(interaction.user.id)
             await user.edit(nick=f"{user_data['unique_id']} {name_second}")
