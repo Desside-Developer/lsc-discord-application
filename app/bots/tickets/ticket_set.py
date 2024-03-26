@@ -11,19 +11,15 @@ import config
 import logging
 print = logging.info
 
-class ticket_system_report(commands.Cog):
+class ticket_system_set(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-    @app_commands.command(name="new_ticket_system_set", description="Система тикетов для > Репортов")
+    @app_commands.command(name="new_ticket_system_set", description="Система тикетов для > Настройка Авто")
     @app_commands.checks.has_permissions(administrator=True)
     async def ticket_system_report(self, interaction: discord.Interaction):
         Embed = discord.Embed(title="⏰🞄 Создайте тикет для - Настройки Авто!", description="Нажмите на кнопку чтобы создать тикет", color=0x9bb8a0)
         Embed.set_author(name=f"{config.ticket_system_author}")
         Embed.set_footer(text="``Статус тикетов: Работает``")
-
-        # view = create_ticket_cheap()
-
-        # await interaction.channel.send(embed=embed, view=view)
 
         embed_main = discord.Embed(color=0x9bb8a0, title="⏰ ‧ 𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨", description="""
 ``ᴄоздᴀйᴛᴇ ᴛиᴋᴇᴛ ʙ нᴀɯᴇй ᴄиᴄᴛᴇʍᴇ!``
@@ -43,24 +39,24 @@ __Наши опытные мастера__
         embed_main.set_footer(text="**𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨**  [✅]")
         embed_main.set_image(url="https://i.imgur.com/7amWKkn.png")
 
-        view = create_ticket_reports()
+        view = create_ticket_set()
 
         await interaction.channel.send(embed=embed_main)
         await interaction.channel.send(embed=Embed, view=view)
-        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket system ( Настройка Авто ): {Fore.GREEN}ticket_system_report{Fore.RESET}")
+        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket system ( Настройка Авто ): {Fore.GREEN}ticket_system_set{Fore.RESET}")
         await interaction.response.send_message("ticket_system_start_set", ephemeral=True)
 
 
-class create_ticket_reports(View):    
+class create_ticket_set(View):    
     def __init__(self):
         super().__init__(timeout=None)
-    @discord.ui.button(label="Создать тикет", style=discord.ButtonStyle.green, custom_id="ticket_button_report", emoji="🎟")
+    @discord.ui.button(label="Создать тикет", style=discord.ButtonStyle.green, custom_id="ticket_button_set", emoji="🎟")
     @app_commands.checks.has_permissions(send_messages=True)
     async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         await check_user(id=interaction.user.id, user_name=interaction.user.name)
-        modal_windows = await interaction.response.send_modal(modal_window_ticket_system_report())
+        modal_windows = await interaction.response.send_modal(modal_window_ticket_system_set())
         if modal_windows is None:
-            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Set > {interaction.user.name}{Fore.RESET}")
         else:
             await modal_windows.delete()
 
@@ -69,31 +65,29 @@ class create_ticket_reports(View):
 
 
 
-@app_commands.describe(problem="Проблема", description_problem="Подробное описание:")
-class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 заполните пункты для: репортов"):
-    problem = discord.ui.TextInput(label="Проблема", placeholder="Опишите вашу проблему в крации", style=discord.TextStyle.short)
-    description_problem = discord.ui.TextInput(label="Подробное описание:", placeholder="Сформулируйте максимально вашу проблему", style=discord.TextStyle.paragraph)
+@app_commands.describe(settings_transport="Настройки какого транспорта вас интересуют?")
+class modal_window_ticket_system_set(discord.ui.Modal, title="📌🞄 заполните пункты"):
+    settings_transport = discord.ui.TextInput(label="Настройки какого транспорта вас интересуют?", placeholder="Напишите названия вашего транспортного средства!", style=discord.TextStyle.short)
     async def on_submit(self, interaction: discord.Interaction):
-        by_category = discord.utils.get(interaction.guild.categories, id=config.ticket_system_report_category)
-        ticket = utils.get(interaction.guild.channels, name=f"report-{interaction.user.name}-{interaction.user.id}")
+        by_category = discord.utils.get(interaction.guild.categories, id=config.ticket_system_set_category)
+        ticket = utils.get(interaction.guild.channels, name=f"set-{interaction.user.name}-{interaction.user.id}")
         if ticket is not None:
-            await interaction.response.send_message("Ты уже создал тикет!", ephemeral=True)
+            await interaction.response.send_message("Ты уже создал тикет ``настройки авто``!", ephemeral=True)
             return
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
             interaction.user: discord.PermissionOverwrite(read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True),
             interaction.guild.me: discord.PermissionOverwrite(read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
         }
-        channel = await interaction.guild.create_text_channel(f"report-{interaction.user.name}-{interaction.user.id}", category=by_category, overwrites=overwrites, reason=f"Тикеты {interaction.user}")
-        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+        channel = await interaction.guild.create_text_channel(f"set-{interaction.user.name}-{interaction.user.id}", category=by_category, overwrites=overwrites, reason=f"Тикеты {interaction.user}")
+        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket channel: {Fore.GREEN} Настройка Авто {Fore.RESET}")
         if channel.category is not None:
             token_ticket = generate_ticket_token()
             embed_ticket_player = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"", color= discord.Colour.blue())
             embed_ticket_player.add_field(name=f"📃 ⭑ Канал: {channel.mention}", value="")
-            embed_ticket_player.add_field(name=f"📒 ⭑ Проблема", value=f"{self.problem}", inline=False)
-            embed_ticket_player.add_field(name=f"📊 ⭑ Подробное описание", value=f"{self.description_problem}", inline=False)
+            embed_ticket_player.add_field(name=f"📒 ⭑ Настройки какого транспорта вас интересуют?", value=f"{self.settings_transport}", inline=False)
             await channel.send(f"{interaction.user.mention}",embed=embed_ticket_player)
-            embed_message_control_tickets = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"{interaction.user.mention} создал тикет - по репортам 📢")
+            embed_message_control_tickets = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"{interaction.user.mention} создал тикет - по **Настройке-Авто** 📢")
             embed_message_control_tickets.add_field(name=f"🔑 ⭑ Где находится : ", value=f"""
 📋 ⭑ Канал: {channel.mention}
 📞 ⭑ Имя Пользователя: **{interaction.user.name}**
@@ -107,7 +101,6 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
                 print(f"Error saving ticket to database: {sync_database}")
                 return await interaction.response.send_message("Ошибка сервера!", ephemeral=True)
             else:
-                # await interaction.user.send(embed=embed_ticket_player)
                 await interaction.response.send_message("Тикет создан!", ephemeral=True)
         else:
             print(f"Error creating ticket: Category not found.")
@@ -148,7 +141,7 @@ class buttons_on_control_ticket_by_moderator(View):
                 await channel.set_permissions(interaction.user, read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
                 if channel:
                     embed_control = discord.Embed(title="Тикет рассматривается", description=f"Куратор: <@{interaction.user.id}> канал: {interaction.channel.mention}", color=discord.Colour.dark_grey())
-                    assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users()) # view=buttons_control_ticket()
+                    assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users())
                     dbMaria.insert_assignment(assigned_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ticket_id=ticket_data['ticket_id'], user_id=interaction.user.id, assignment_id=assigned_message.id)
                     print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}accept ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
                 else:
@@ -173,7 +166,7 @@ class control_ticket_system_users(View):
             await client_control.client.get_channel(int(channel_data['channel_id'])).delete()
             await interaction.message.delete()
             await interaction.response.send_message(f"Тикет закрыт!", ephemeral=True)
-            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}close ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}close ticket: {Fore.GREEN}Настройка-Авто{Fore.RESET}")
         else:
             await interaction.response.send_message(f"Нету информации о тикете!", ephemeral=True)
     @discord.ui.button(label="Информация о тикете", style=discord.ButtonStyle.grey, custom_id="control_system_ticket_info", emoji="🧮")
@@ -195,11 +188,11 @@ class control_ticket_system_users(View):
 async def setup(client: commands.Bot) -> None:
     global client_control
     try:
-        client_control = ticket_system_report(client)
+        client_control = ticket_system_set(client)
         client.add_view(control_ticket_system_users())
         client.add_view(buttons_on_control_ticket_by_moderator())
-        client.add_view(create_ticket_reports())
-        await client.add_cog(ticket_system_report(client), guilds=[discord.Object(id=1200955239281467422)])
-        print(f"{Fore.GREEN}Cog '{Fore.RED}ticket_report{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
+        client.add_view(create_ticket_set())
+        await client.add_cog(ticket_system_set(client), guilds=[discord.Object(id=1200955239281467422)])
+        print(f"{Fore.GREEN}Cog '{Fore.RED}ticket_set{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
     except Exception as e:
-        print(f"{Fore.RED}Error adding cog '{Fore.RED}ticket_report{Fore.GREEN}': {e}{Style.RESET_ALL}")
+        print(f"{Fore.RED}Error adding cog '{Fore.RED}ticket_set{Fore.GREEN}': {e}{Style.RESET_ALL}")

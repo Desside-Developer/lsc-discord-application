@@ -5,7 +5,7 @@ from discord.ext import commands
 from colorama import Back, Fore, Style
 from discord import app_commands, utils
 from discord.ui import View, Button
-from cogs.database.database import MySQLConnectorManager as dbMaria
+from database.database import MySQLConnectorManager as dbMaria
 import config 
 import logging
 from unicodedata import category

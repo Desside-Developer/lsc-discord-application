@@ -62,7 +62,7 @@ class create_ticket_reports(View):
 
 
 @app_commands.describe(problem="Проблема", description_problem="Подробное описание:")
-class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 заполните пункты для: репортов"):
+class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 заполните пункты"):
     problem = discord.ui.TextInput(label="Проблема", placeholder="Опишите вашу проблему в крации", style=discord.TextStyle.short)
     description_problem = discord.ui.TextInput(label="Подробное описание:", placeholder="Сформулируйте максимально вашу проблему", style=discord.TextStyle.paragraph)
     async def on_submit(self, interaction: discord.Interaction):
