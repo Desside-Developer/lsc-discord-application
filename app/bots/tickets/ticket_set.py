@@ -73,7 +73,7 @@ class modal_window_ticket_system_set(discord.ui.Modal, title="📌🞄 запо�
         by_category = discord.utils.get(interaction.guild.categories, id=config.ticket_system_set_category)
         ticket = utils.get(interaction.guild.channels, name=f"set-{interaction.user.name}-{interaction.user.id}")
         if ticket is not None:
-            await interaction.response.send_message("Ты уже создал тикет ``настройки авто``!", ephemeral=True)
+            await interaction.response.send_message("Ты уже создал тикет ``настройки авто`` 📢!", ephemeral=True)
             return
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),

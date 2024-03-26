@@ -80,7 +80,7 @@ class modal_window_ticket_system_cheap(discord.ui.Modal, title="💿🞄 зап�
         by_category = discord.utils.get(interaction.guild.categories, id=config.ticket_system_cheap_category)
         ticket = utils.get(interaction.guild.channels, name=f"cheap-{interaction.user.name}-{interaction.user.id}")
         if ticket is not None:
-            await interaction.response.send_message("Ты уже создал тикет **Аренды Авто!**!", ephemeral=True)
+            await interaction.response.send_message("Ты уже создал тикет **Установка Чипа** 📢!", ephemeral=True)
             return
         overwrites = {
             interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
