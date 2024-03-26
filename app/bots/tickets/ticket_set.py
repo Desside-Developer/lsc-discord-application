@@ -68,7 +68,7 @@ class create_ticket_set(View):
 
 @app_commands.describe(settings_transport="Настройки какого транспорта вас интересуют?")
 class modal_window_ticket_system_set(discord.ui.Modal, title="📌🞄 заполните пункты"):
-    settings_transport = discord.ui.TextInput(label="Настройки какого транспорта вас интересуют?", placeholder="Напишите названия вашего транспортного средства!", style=discord.TextStyle.short)
+    settings_transport = discord.ui.TextInput(label="Настройки какого транспорта вас интересуют?", placeholder="Напишите названия вашего транспортного средства!", style=discord.TextStyle.paragraph)
     async def on_submit(self, interaction: discord.Interaction):
         by_category = discord.utils.get(interaction.guild.categories, id=config.ticket_system_set_category)
         ticket = utils.get(interaction.guild.channels, name=f"set-{interaction.user.name}-{interaction.user.id}")

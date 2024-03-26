@@ -40,6 +40,7 @@ class Client(commands.Bot):
             "commands.system_start",
             "commands.database_system",
             "tickets.ticket_report",
+            "tickets.ticket_rent",
             "tickets.ticket_set"
             # "cogs.ticket_system",
             # "cogs.add_role_system",
