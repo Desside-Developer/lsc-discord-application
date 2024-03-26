@@ -58,7 +58,7 @@ async def check_name_second(name_second):
 async def save_ticket_for_table(ticket_id, user_id, status, channel_id, message_id, created_at):
     try:
         dbMaria.insert_tickets_data(ticket_id, user_id, status, channel_id, message_id, created_at)
-        print(f"{Fore.RED}{ticket_id} {Fore.YELLOW}created ticket: {Fore.GREEN}tickets{Fore.RESET}")
+        print(f"{Fore.RED}{ticket_id} {Fore.YELLOW}created ticket: {Fore.GREEN}{created_at}{Fore.RESET}")
         return True
     except Exception as e:
         print(f"Error saving ticket to database: {e}")

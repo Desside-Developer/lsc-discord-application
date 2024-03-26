@@ -60,7 +60,7 @@ class modal_window_replace_name(discord.ui.Modal, title="📌🞄 заполни
         if name_second_response == True:
             return await interaction.response.send_message("Такое имя уже есть!", ephemeral=True)
         user_data = await save_user_tags(id=interaction.user.id, name_second=name_second)
-        await logs_responde.auth_users(user_data)
+        await logs_responde.auth_users(dict=user_data)
         print(f"""
 {Fore.RED}( System_Auth )
 user_id: {user_data['user_id']}

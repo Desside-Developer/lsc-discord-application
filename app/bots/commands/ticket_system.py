@@ -5,7 +5,7 @@ from discord.ext import commands
 from colorama import Back, Fore, Style
 from discord import app_commands, utils
 from discord.ui import View, Button
-from app.bots.cogs.database.database import dbMaria
+from database.database import dbMaria
 import config 
 import logging
 print = logging.info
