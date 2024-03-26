@@ -52,7 +52,7 @@ class create_ticket_reports(View):
         await check_user(id=interaction.user.id, user_name=interaction.user.name)
         modal_windows = await interaction.response.send_modal(modal_window_ticket_system_report())
         if modal_windows is None:
-            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}open modal ticket: {Fore.GREEN}Репорты{Fore.RESET}")
         else:
             await modal_windows.delete()
 
@@ -77,7 +77,7 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
             interaction.guild.me: discord.PermissionOverwrite(read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
         }
         channel = await interaction.guild.create_text_channel(f"report-{interaction.user.name}-{interaction.user.id}", category=by_category, overwrites=overwrites, reason=f"Тикеты {interaction.user}")
-        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket channel: {Fore.GREEN} {channel.name} {Fore.RESET}")
         if channel.category is not None:
             token_ticket = generate_ticket_token()
             embed_ticket_player = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"", color= discord.Colour.blue())
@@ -129,13 +129,10 @@ class buttons_on_control_ticket_by_moderator(View):
             if ticket_data == []:
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
             ticket_data = ticket_data[0]
-            print(ticket_data)
             user_assignment = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=ticket_data['ticket_id'], table_name='assigned_tickets')
-            print(user_assignment)
             if user_assignment == []:
                 await interaction.response.send_message("Вам будет присвоен новый тикет!", ephemeral=True)
                 channel_id = int(ticket_data['channel_id'])
-                print(channel_id)
                 channel = interaction.guild.get_channel(channel_id)
                 await channel.set_permissions(interaction.user, read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
                 if channel:
@@ -162,6 +159,8 @@ class control_ticket_system_users(View):
             channel_data = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=user['ticket_id'], table_name='tickets'); channel_data = channel_data[0]
             if channel_data['channel_id'] == None:
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
+            dbMaria.delete_one_data(table_name="assigned_tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
+            dbMaria.delete_one_data(table_name="tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
             await client_control.client.get_channel(int(channel_data['channel_id'])).delete()
             await interaction.message.delete()
             await interaction.response.send_message(f"Тикет закрыт!", ephemeral=True)

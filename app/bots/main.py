@@ -36,11 +36,11 @@ class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('!'), intents=discord.Intents.all())
         self.cogslist = [
+            "logs.logging",
             "commands.system_start",
             "commands.database_system",
             "tickets.ticket_report",
-            "tickets.ticket_set",
-            "logs.logging"
+            "tickets.ticket_set"
             # "cogs.ticket_system",
             # "cogs.add_role_system",
             # "cogs.ember_creator_system",

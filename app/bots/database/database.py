@@ -88,6 +88,11 @@ class MySQLConnectorManager:
         self.cursor.execute(query)
         self.db_mysql_connector.commit()
 
+    def delete_one_data(self, table_name, condition_column, condition_value):
+        query = f"DELETE FROM {table_name} WHERE {condition_column} = %s;"
+        self.cursor.execute(query, (condition_value,))
+        self.db_mysql_connector.commit()
+
     def get_data_by_condition(self, table_name, condition_column, condition_value):
         self.cursor.execute(f"SELECT * FROM {table_name} WHERE {condition_column} = %s", (condition_value,))
         rows = self.cursor.fetchall()

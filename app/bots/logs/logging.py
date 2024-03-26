@@ -26,9 +26,6 @@ class logs(commands.Cog):
             await admin_user.send(embed=Embed)
         else:
             logging.error(f"Admin user with ID {960251916762378241} not found.")
-    # async def ticket_system_up(self, dict):
-    #     Embed = discord.Embed(title="test", color=0xffffff, description="""1""")
-    #     Embed.set_thumbnail(url="https://...")
 
 logs_responde = None
 
