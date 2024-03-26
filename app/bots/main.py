@@ -41,6 +41,7 @@ class Client(commands.Bot):
             "commands.database_system",
             "tickets.ticket_report",
             "tickets.ticket_rent",
+            "tickets.ticket_cheap",
             "tickets.ticket_set"
             # "cogs.ticket_system",
             # "cogs.add_role_system",

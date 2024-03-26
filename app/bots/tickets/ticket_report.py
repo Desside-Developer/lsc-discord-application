@@ -85,7 +85,7 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
             embed_ticket_player.add_field(name=f"📒 ⭑ Проблема", value=f"{self.problem}", inline=False)
             embed_ticket_player.add_field(name=f"📊 ⭑ Подробное описание", value=f"{self.description_problem}", inline=False)
             await channel.send(f"{interaction.user.mention}",embed=embed_ticket_player)
-            embed_message_control_tickets = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"{interaction.user.mention} создал тикет - по репортам 📢")
+            embed_message_control_tickets = discord.Embed(title=f"🎓 ⭑ Тикет ID:``{token_ticket}``", description=f"{interaction.user.mention} создал тикет - по **Репортам** 📢")
             embed_message_control_tickets.add_field(name=f"🔑 ⭑ Где находится : ", value=f"""
 📋 ⭑ Канал: {channel.mention}
 📞 ⭑ Имя Пользователя: **{interaction.user.name}**

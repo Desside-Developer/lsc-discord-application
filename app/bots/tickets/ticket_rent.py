@@ -224,6 +224,6 @@ async def setup(client: commands.Bot) -> None:
         client.add_view(buttons_on_control_ticket_by_moderator())
         client.add_view(create_ticket_rent())
         await client.add_cog(ticket_system_rent(client), guilds=[discord.Object(id=1200955239281467422)])
-        print(f"{Fore.GREEN}Cog '{Fore.RED}ticket_set{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}Cog '{Fore.RED}ticket_cheap{Fore.GREEN}' successfully added.{Style.RESET_ALL}")
     except Exception as e:
-        print(f"{Fore.RED}Error adding cog '{Fore.RED}ticket_set{Fore.GREEN}': {e}{Style.RESET_ALL}")
+        print(f"{Fore.RED}Error adding cog '{Fore.RED}ticket_cheap{Fore.GREEN}': {e}{Style.RESET_ALL}")
