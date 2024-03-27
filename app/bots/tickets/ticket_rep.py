@@ -15,9 +15,9 @@ print = logging.info
 class ticket_system_rep(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-    @app_commands.command(name="rep", description="Система тикетов для > Починки Двигателей")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def ticket_system_rep(self, interaction: discord.Interaction):
+    @commands.command(name="rep")
+    @commands.has_permissions(administrator=True)
+    async def ticket_system_rep(self, ctx: commands.Context):
         Embed = discord.Embed(title="🔧🞄 Создайте тикет для - Починки Двигателя!", description="Нажмите на кнопку чтобы создать тикет", color=0xff0044)
         Embed.set_author(name=f"{config.ticket_system_author}")
         Embed.set_footer(text="``Статус тикетов: Работает``")
@@ -36,10 +36,9 @@ class ticket_system_rep(commands.Cog):
 
         view = create_ticket_rep()
 
-        await interaction.channel.send(embed=embed_main)
-        await interaction.channel.send(embed=Embed, view=view)
-        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket system ( Починка Двигателя ): {Fore.GREEN}ticket_system_rep{Fore.RESET}")
-        await interaction.response.send_message("ticket_system_start_cheap", ephemeral=True)
+        await ctx.send(embed=embed_main)
+        await ctx.send(embed=Embed, view=view)
+        print(f"{Fore.RED}{ctx.author.name} {Fore.YELLOW}created ticket system ( Починка Двигателя ): {Fore.GREEN}ticket_system_rep{Fore.RESET}")
 
 
 
@@ -88,7 +87,7 @@ class modal_window_ticket_system_rep(discord.ui.Modal, title="💿🞄 запо�
 🔔 ⭑ Упоминалка Данного пользователя: {interaction.user.mention}
 """)
             control_message = interaction.guild.get_channel(config.ticket_system_rep_channel_request)
-            message_id_control = await control_message.send(embed=embed_message_control_tickets, view=buttons_on_control_ticket_by_moderator())
+            message_id_control = await control_message.send('<@&1204254986154934415>',embed=embed_message_control_tickets, view=buttons_on_control_ticket_by_moderator())
             sync_database = await save_ticket_for_table(ticket_id=token_ticket, user_id=interaction.user.id, status="New", channel_id=channel.id, message_id=message_id_control.id, created_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             if sync_database is False:
                 print(f"Error saving ticket to database: {sync_database}")
@@ -121,6 +120,7 @@ class buttons_on_control_ticket_by_moderator(View):
             self.plus_button_clicked_by_user = True
             ticket_data = dbMaria.get_data_by_condition(condition_column='message_id', condition_value=interaction.message.id, table_name='tickets')
             if ticket_data == []:
+                await interaction.message.delete()
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
             ticket_data = ticket_data[0]
             user_assignment = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=ticket_data['ticket_id'], table_name='assigned_tickets')
@@ -134,7 +134,7 @@ class buttons_on_control_ticket_by_moderator(View):
 🔴 ⭑ Менеджер: <@{interaction.user.id}> 
 📢 ⭑ канал: {channel.mention}
 """, color=discord.Colour.red())
-                    await channel.send(f"<@{ticket_data['user_id']}> Ваш тикет приняли!", embed=embed_for_user)
+                    await channel.send(f"{interaction.user.mention} <@{ticket_data['user_id']}> Ваш тикет приняли!", embed=embed_for_user)
                     embed_control = discord.Embed(title="**Товарищ Менеджер держите свою панельку**!", description=f"Думаю вам не нужно пояснять что за что отвечает.", color=discord.Colour.brand_green())
                     embed_accept = discord.Embed(title=f"🤖 ⭑ Принял Тикет: ``{ticket_data['ticket_id']}``", description=f"""
 🔴 ⭑ **Пользователь**: ``{interaction.user.mention}``
@@ -143,7 +143,8 @@ class buttons_on_control_ticket_by_moderator(View):
 Принял Тикет Успешно! ✅
 """)
                     embed_accept.set_footer(text="𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨  [✅]")
-                    await interaction.channel.send(embed=embed_accept)
+                    channel_logs = interaction.guild.get_channel(1205648797422719046)
+                    await channel_logs.send(embed=embed_accept)
                     await interaction.message.delete()
                     assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users())
                     dbMaria.insert_assignment(assigned_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ticket_id=ticket_data['ticket_id'], user_id=interaction.user.id, assignment_id=assigned_message.id)

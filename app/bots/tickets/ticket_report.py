@@ -1,4 +1,5 @@
 import datetime
+import os
 import discord
 import json
 from discord.ext import commands
@@ -14,17 +15,17 @@ print = logging.info
 class ticket_system_report(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-    @app_commands.command(name="new_ticket_system_report", description="Система тикетов для > Репортов")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def ticket_system_report(self, interaction: discord.Interaction):
+    @commands.command(name="report")
+    @commands.has_permissions(administrator=True)
+    async def ticket_system_report(self, ctx: commands.Context):
         Embed = discord.Embed(title="📌🞄 Создайте тикет для - Репортов!", description="Нажмите на кнопку чтобы создать тикет", color=0xffffff)
         Embed.set_author(name=f"{config.ticket_system_author}")
         Embed.set_footer(text="``Статус тикетов: Работает``")
 
         embed_main = discord.Embed(color=0xffffff, title="🌏 ‧ 𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨", description="""
 - Если вы столкнулись с какой-либо **проблемой**
-на сервере, будь то **нарушение** *правил*, *баг*, 
-или просто нужна *помощь*, 
+на сервере, будь то **нарушение** *правил*, *баг*,
+или просто нужна *помощь*,
 ``ᴄоздᴀйᴛᴇ ᴛиᴋᴇᴛ ʙ нᴀɯᴇй ᴄиᴄᴛᴇʍᴇ!``
 - **__Спасибо за ваше сотрудничество!)__**
 - <#1205649863937761370>
@@ -37,13 +38,12 @@ class ticket_system_report(commands.Cog):
 
         view = create_ticket_reports()
 
-        await interaction.channel.send(embed=embed_main)
-        await interaction.channel.send(embed=Embed, view=view)
-        print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}created ticket system: {Fore.GREEN}ticket_system_report{Fore.RESET}")
-        await interaction.response.send_message("ticket_system_start_reports", ephemeral=True)
+        await ctx.send(embed=embed_main)
+        await ctx.send(embed=Embed, view=view)
+        print(f"{Fore.RED}{ctx.author.name} {Fore.YELLOW}created ticket system: {Fore.GREEN}ticket_system_report{Fore.RESET}")
 
 
-class create_ticket_reports(View):    
+class create_ticket_reports(View):
     def __init__(self):
         super().__init__(timeout=None)
     @discord.ui.button(label="Создать тикет", style=discord.ButtonStyle.green, custom_id="ticket_button_report", emoji="🎟")
@@ -93,7 +93,7 @@ class modal_window_ticket_system_report(discord.ui.Modal, title="📌🞄 зап
 🔔 ⭑ Упоминалка Данного пользователя: {interaction.user.mention}
 """)
             control_message = interaction.guild.get_channel(config.ticket_system_report_channel_request)
-            message_id_control = await control_message.send(embed=embed_message_control_tickets, view=buttons_on_control_ticket_by_moderator())
+            message_id_control = await control_message.send('<@&1204254986154934415>',embed=embed_message_control_tickets, view=buttons_on_control_ticket_by_moderator())
             sync_database = await save_ticket_for_table(ticket_id=token_ticket, user_id=interaction.user.id, status="New", channel_id=channel.id, message_id=message_id_control.id, created_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             if sync_database is False:
                 print(f"Error saving ticket to database: {sync_database}")
@@ -127,6 +127,7 @@ class buttons_on_control_ticket_by_moderator(View):
             self.plus_button_clicked_by_user = True
             ticket_data = dbMaria.get_data_by_condition(condition_column='message_id', condition_value=interaction.message.id, table_name='tickets')
             if ticket_data == []:
+                await interaction.message.delete()
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
             ticket_data = ticket_data[0]
             user_assignment = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=ticket_data['ticket_id'], table_name='assigned_tickets')
@@ -136,8 +137,23 @@ class buttons_on_control_ticket_by_moderator(View):
                 channel = interaction.guild.get_channel(channel_id)
                 await channel.set_permissions(interaction.user, read_messages=True, view_channel=True, send_messages=True, embed_links= True, read_message_history = True)
                 if channel:
-                    embed_control = discord.Embed(title="Тикет рассматривается", description=f"Куратор: <@{interaction.user.id}> канал: {interaction.channel.mention}", color=discord.Colour.dark_grey())
-                    assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users()) # view=buttons_control_ticket()
+                    embed_for_user = discord.Embed(title="Тикет рассматривается", description=f"""
+🔴 ⭑ Менеджер: <@{interaction.user.id}> 
+📢 ⭑ канал: {channel.mention}
+""", color=discord.Colour.red())
+                    await channel.send(f"{interaction.user.mention} <@{ticket_data['user_id']}> Ваш тикет приняли!", embed=embed_for_user)
+                    embed_control = discord.Embed(title="**Товарищ Менеджер держите свою панельку**!", description=f"Думаю вам не нужно пояснять что за что отвечает.", color=discord.Colour.brand_green())
+                    embed_accept = discord.Embed(title=f"🤖 ⭑ Принял Тикет: ``{ticket_data['ticket_id']}``", description=f"""
+🔴 ⭑ **Пользователь**: ``{interaction.user.mention}``
+🎖 ⭑ **Имя**: ``{interaction.user.name}``
+🔥 ⭑ **Айди**: ``{interaction.user.id}``
+Принял Тикет Успешно! ✅
+""")
+                    embed_accept.set_footer(text="𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨  [✅]")
+                    channel_logs = interaction.guild.get_channel(1205648797422719046)
+                    await channel_logs.send(embed=embed_accept)
+                    await interaction.message.delete()
+                    assigned_message = await interaction.user.send(embed=embed_control, view=control_ticket_system_users())
                     dbMaria.insert_assignment(assigned_at=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ticket_id=ticket_data['ticket_id'], user_id=interaction.user.id, assignment_id=assigned_message.id)
                     print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}accept ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
                 else:
@@ -154,27 +170,46 @@ class control_ticket_system_users(View):
         super().__init__(timeout=None)
     @discord.ui.button(label="Закрыть тикет!", style=discord.ButtonStyle.red, custom_id="control_system_ticket_close", emoji="🧨")
     async def close_ticket_user(self, interaction: discord.Interaction, button: discord.ui.button):
-        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets'); user = user[0]
-        if user:
+        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets')
+        if user != []:
+            user = user[0]
             channel_data = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=user['ticket_id'], table_name='tickets'); channel_data = channel_data[0]
             if channel_data['channel_id'] == None:
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
-            dbMaria.delete_one_data(table_name="assigned_tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
-            dbMaria.delete_one_data(table_name="tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
+            channel_info = client_control.client.get_channel(int(channel_data['channel_id']))
+            messages = channel_info.history(limit=None, oldest_first=True)
+            contents = []
+            async for message in messages:
+                contents.append(message.content)
+            final = "\n".join(contents)
+            with open('transcript.txt', 'w') as f:
+                f.write(final)
+            await interaction.channel.send(file=discord.File('transcript.txt'))
             await client_control.client.get_channel(int(channel_data['channel_id'])).delete()
             await interaction.message.delete()
+            dbMaria.delete_one_data(table_name="assigned_tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
+            dbMaria.delete_one_data(table_name="tickets",condition_column="ticket_id",condition_value=channel_data['ticket_id'])
             await interaction.response.send_message(f"Тикет закрыт!", ephemeral=True)
-            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}close ticket: {Fore.GREEN}Ticket-System-001{Fore.RESET}")
+            os.remove("transcript.txt")
+            print(f"{Fore.RED}{interaction.user} {Fore.YELLOW}close ticket: {Fore.GREEN}Настройка-Авто{Fore.RESET}")
         else:
             await interaction.response.send_message(f"Нету информации о тикете!", ephemeral=True)
     @discord.ui.button(label="Информация о тикете", style=discord.ButtonStyle.grey, custom_id="control_system_ticket_info", emoji="🧮")
     async def info_ticket_user(self, interaction: discord.Interaction, button: discord.ui.button):
-        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets'); user = user[0]
+        user = dbMaria.get_data_by_condition(condition_column='assignment_id', condition_value=interaction.message.id, table_name='assigned_tickets')
         if user:
+            user = user[0]
             channel_data = dbMaria.get_data_by_condition(condition_column='ticket_id', condition_value=user['ticket_id'], table_name='tickets'); channel_data = channel_data[0]
             if channel_data['channel_id'] == None:
                 return await interaction.response.send_message("Тикет не найден!", ephemeral=True)
-            Embed = discord.Embed(title='📓 ⭑ Информация о тикете', description="""""", color=0xffffff)
+            Embed = discord.Embed(title='📓 ⭑ Информация о тикете', description=f"""
+🔴 ⭑ **Тикет Айди**: ``{channel_data['ticket_id']}``
+🙂 ⭑ **Айди Пользователя**: <@{channel_data['user_id']}>
+🔊 ⭑ **Статус**: ``{channel_data['status']}``
+📢 ⭑ **Канал**: <#{channel_data['channel_id']}>
+🔥 ⭑ **Айди Сообщения**: ``{channel_data['message_id']}``
+⭐️ ⭑ **Время создания**: ``{channel_data['created_at']}``
+""", color=0xffffff)
             await interaction.response.send_message(embed=Embed, ephemeral=True)
         else:
             await interaction.response.send_message(f"Нету информации о тикете!", ephemeral=True)

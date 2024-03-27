@@ -2,6 +2,7 @@ import sys
 sys.path.append('/code/app/bots')
 sys.path.append('/code/app/bots/handlers')
 sys.path.append('/code/app/bots/commands')
+sys.path.append('/code/app/bots/events')
 sys.path.append('/code/app/bots/tickets')
 
 import discord
@@ -33,11 +34,17 @@ print = CustomLogging().log
 
 class Client(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=commands.when_mentioned_or('!'), intents=discord.Intents.all())
+        super().__init__(command_prefix=commands.when_mentioned_or('%'), intents=discord.Intents.all())
         self.cogslist = [
             "logs.logging",
             "commands.system_start",
+            "commands.system_on_reaction",
             "commands.database_system",
+            "commands.nickname_on_join",
+            "commands.embeds_responder",
+            "commands.auto_reload_cogs",
+            "commands.status_server",
+            "events.on_member",
             "tickets.ticket_report",
             "tickets.ticket_rent",
             "tickets.ticket_cheap",
@@ -51,6 +58,7 @@ class Client(commands.Bot):
         try:
             guild = self.get_guild(1200955239281467422)
             await self.tree.sync(guild=guild)
+            await self.tree.sync()
             await self.change_presence(status=discord.Status.dnd, activity=discord.Streaming(name='twinsikk', url='https://www.twitch.tv/twinsikk'))
             prfx = (Back.BLACK + Fore.GREEN + time.strftime("%H:%M:%S UTC", time.localtime()) + Back.RESET + Fore.WHITE + Style.BRIGHT)
             print(prfx + " Logged in as " + Fore.YELLOW + self.user.name)
@@ -87,9 +95,34 @@ Client = Client()
 Slash Commands Next: //
 help
 """
+@Client.command(name="embed_responder")
+@commands.has_permissions(administrator=True)
+async def admin_embed(ctx: commands.Context):
+    await ctx.message.delete()
+    view = EmbedCreator(bot=Client)
+    await ctx.send(embed=view.get_default_embed, view=view)
 
-@Client.tree.command(name="test-garage", description="embed")
-async def embed(interaction: discord.Interaction):
+
+@Client.command(name="clearslash", description="Clears all registered slash commands.")
+@commands.is_owner()
+async def clearslash(ctx: commands.Context):
+    """Clears all registered slash commands. Only the bot owner can use this command."""
+    await ctx.reply("Clearing all slash commands...", mention_author=False)
+    guild_id = 1200955239281467422
+    Client.tree.clear_commands(guild=discord.Object(id=guild_id))
+    await ctx.reply("All slash commands have been cleared.", mention_author=False)
+
+@Client.command(name='deletecommands', aliases=['clear'])
+@commands.is_owner()
+async def delete_commands(ctx):
+    Client.tree.clear_commands(guild=None)
+    await Client.tree.sync()
+    await ctx.send('Commands deleted.')
+
+
+@Client.command(name='test-garage')
+@commands.is_owner()
+async def embed(ctx: commands.Context):
     embed_main = discord.Embed(color=0xffffff, title="📌‧ нᴀɯи ᴦᴀᴩᴀжи!", description=f"""Если у вас возникают вопросы.
 - Обратитесь к модераторам
 - или к администраторам. ↙
@@ -98,56 +131,11 @@ async def embed(interaction: discord.Interaction):
         )
     embed_main.set_image(url="https://i.imgur.com/sOyS2oX.png")
     embed_main.set_footer(text="**𝐋𝐒𝐂 - 𝙎𝙚𝙧𝙫𝙞𝙘𝙚𝙨**  [✅]")
-    embed_info = discord.Embed(color=0xffffff, title="📌‧ зᴀᴋᴧᴀдᴋᴀ", description=f"""
+    embed_info = discord.Embed(color=0x63f700, title="📌‧ зᴀᴋᴧᴀдᴋᴀ", description=f"""
 Спасибо за ваше сотрудничество!
 """)
-    await interaction.channel.send(embed=embed_main)
-    await interaction.channel.send(embed=embed_info)
-    await interaction.response.send_message("Ready", ephemeral=True)
-
-@Client.event
-async def on_member_join(member: discord.Member):
-    channel = member.guild.get_channel(1214952893271248946)
-    background = Editor('app/bots/Reports-banner.png')
-    profile_image = await load_image_async(str(member.avatar.url))
-    profile = Editor(profile_image).resize((150, 150)).circle_image()
-    popping = Font.poppins(size=50, variant="bold")
-    poppins_small = Font.poppins(size=20, variant="light")
-    background.paste(profile, (325, 90))
-    background.ellipse((325, 90), 150, 150, outline=None, stroke_width=5)
-    background.text((450, 160), member.name, color="white", font=popping)
-    background.text((450, 200), str(member.id), color="white", font=poppins_small)  # Convert member.id to string
-    file = File(fp=background.image_bytes, filename="https://i.imgur.com/8txHSse.png")
-    await channel.send(file=file)
-    try:
-        channel = member.guild.get_channel(1207710865202221076)
-        if channel:
-            await channel.send(f'```Индентификатор:{member.id}``` ```Имя пользователя:{member.name}``` ```Присоединился:{member.joined_at}``` Аватар:{member.avatar}!')
-            role = member.guild.get_role(1204254987396448287)
-            if role:
-                await member.add_roles(role)
-                print(f'Участнику {member.name} присвоена роль {role.name}.')
-            else:
-                print('Указанная роль не найдена.')
-        else:
-            print('Указанный канал не найден.')
-    except Exception as e:
-        print(f'Ошибка при обработке события on_member_join: {e}')
-@Client.event
-async def message_event(member: discord.Member):
-    try:
-        channel = member.guild.get_channel(1207710865202221076)
-        if channel:
-            await channel.send(f'```Индентификатор:{member.id}``` ```Имя пользователя:{member.name}``` ```Присоединился:{member.joined_at}``` Аватар:{member.avatar}!')
-            role = member.guild.get_role(1204254987396448287)
-            if role:
-                await member.add_roles(role)
-                print(f'Участнику {member.name} присвоена роль {role.name}.')
-            else:
-                print('Указанная роль не найдена.')
-        else:
-            print('Указанный канал не найден.')
-    except Exception as e: discord.message
+    await ctx.send(embed=embed_main)
+    await ctx.send(embed=embed_info)
 
 
 

@@ -12,24 +12,23 @@ from logs.logging import logs_responde
 
 print = logging.info
 
-
 class system_start(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
-    @app_commands.command(name="system_messages", description="system_tags")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def system_messages(self, interaction: discord.Interaction):
-        Embed = discord.Embed(color=0x27ff78, title="Добро пожаловать на сервер!", description="""
+    @commands.command(name="test01")
+    @commands.has_permissions(administrator=True)
+    async def system_messages(self, ctx: commands.Context):
+        await ctx.message.delete()
+        embed = discord.Embed(color=0x000001, title="Добро пожаловать на сервер!", description="""
 1. Вам __необходимо__ пройти **мини**-``авторизацию``
 Нажмите на ``кнопку`` авторизации
-и введите свой никнейм ``от 3 до 12 символов``.
+и введите свой никнейм из проекта ``Arizona``.
 **Вам сгенерируем, уникальный айди** ``[0000]``
 Данная регистрация проходит единожды, но если
 вы покинете наш сервер, ваш пользователь будет анулирован.
 """)
         view = system_start_view()
-        await interaction.channel.send(embed=Embed, view=view)
-        await interaction.response.send_message("Ready", ephemeral=True)
+        await ctx.send(embed=embed, view=view)
 
 
 
@@ -40,7 +39,7 @@ class system_start_view(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Авторизация", style=discord.ButtonStyle.green, custom_id="system_start_button_auth", emoji="🌎")
+    @discord.ui.button(label="Авторизация", style=discord.ButtonStyle.gray, custom_id="system_start_button_auth", emoji="🌎")
     async def system_start_button_authorization(self, interaction: discord.Interaction, button: discord.ui.Button):
         # search_user = dbMaria.get_data_by_condition('users', condition_column='user_id',condition_value=interaction.user.id)
         await check_user(id=interaction.user.id, user_name=interaction.user.name)
@@ -49,7 +48,6 @@ class system_start_view(View):
             modal_windows = await interaction.response.send_modal(modal_window_replace_name())
         else:
             await interaction.response.send_message("Вы уже авторизованы!", ephemeral=True)
-
 @app_commands.describe(name="Ваше имя:", second="Ваша фамилия:")
 class modal_window_replace_name(discord.ui.Modal, title="📌🞄 заполните пункты"):
     name = discord.ui.TextInput(label="Ваше имя:", placeholder="пример: John", style=discord.TextStyle.paragraph)
@@ -73,11 +71,10 @@ inventory: {user_data['inventory']}
         try:
             user = await interaction.guild.fetch_member(interaction.user.id)
             await user.edit(nick=f"{user_data['unique_id']} {name_second}")
+            await interaction.user.add_roles(interaction.guild.get_role(1204255081147666492))
             await interaction.response.send_message("Регистрация завершена!", ephemeral=True)
         except Exception as e:
             await interaction.response.send_message(e, ephemeral=True)
-
-
 
 
 """
