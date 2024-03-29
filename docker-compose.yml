@@ -4,6 +4,8 @@ services:
     image: 'python:3.12-alpine'
     restart: unless-stopped
     working_dir: /code
+    ports:
+      - '6901:6901'
     volumes:
       - '.\\app:/code/app'
       - '.\\requirements.txt:/code/requirements.txt'
@@ -37,3 +39,27 @@ services:
       - MARIADB_ROOT_PASSWORD=pass12345
       - MYSQL_ROOT_PASSWORD=pass12345
       - MYSQL_DATABASE=lsc-bot-system-database
+  redis-stack:
+    image: redis/redis-stack
+    ports:
+      - '6379:6379'
+      - '8001:8001'
+  uptime-kuma:
+    image: elestio/uptime-kuma
+    volumes:
+      - 'uptime-kuma:/app/data'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    ports:
+      - '7777:3001'
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "9801:3000"  # Map container port 3000 to host port 3000 (default)
+    volumes:
+      - grafana-data:/var/lib/grafana  # Optional volume to persist data
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=pass12345  # Set an admin password
+
+volumes:
+  uptime-kuma:  # Define the volume itself
+  grafana-data:  # Optional volume to persist data

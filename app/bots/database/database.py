@@ -27,6 +27,10 @@ class MySQLConnectorManager:
         self.db_mysql_connector = mysql.connector.connect(**self.config)
         self.cursor = self.db_mysql_connector.cursor()
 
+    def reconnect(self):
+        self.db_mysql_connector.reconnect()
+        self.cursor = self.db_mysql_connector.cursor()
+
     def disconnect(self):
         self.cursor.close()
         self.db_mysql_connector.close()
@@ -47,6 +51,8 @@ class MySQLConnectorManager:
         self.db_mysql_connector.commit()
 
     def insert_data(self, table_name, data):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         columns = ', '.join(data.keys())
         values = ', '.join(['%s'] * len(data))
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
@@ -54,29 +60,39 @@ class MySQLConnectorManager:
         self.db_mysql_connector.commit()
 
     def insert_user_data(self, user_id, unique_id, username, balance, on_joined, inventory):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = "INSERT INTO users (user_id, unique_id, username, balance, on_joined, inventory) VALUES (%s, %s, %s, %s, %s, %s)"
         self.cursor.execute(query, (user_id, unique_id, username, balance, on_joined, inventory))
         self.db_mysql_connector.commit()
 
     def insert_user_tags(self, user_id, name_second, data_register):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = f"INSERT INTO tags_users (user_id, name_second, data_register) VALUES (%s, %s, %s)"
         self.cursor.execute(query, (user_id, name_second, data_register))
         self.db_mysql_connector.commit()
         return self.cursor.lastrowid
 
     def insert_tickets_data(self, ticket_id, user_id, status, channel_id, message_id, created_at, closed_at=None):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = f"INSERT INTO tickets (ticket_id, user_id, status, channel_id, message_id, created_at, closed_at) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         self.cursor.execute(query, (ticket_id, user_id, status, channel_id, message_id, created_at, closed_at))
         self.db_mysql_connector.commit()
         return self.cursor.lastrowid
 
     def insert_assignment(self, assignment_id, ticket_id, user_id, assigned_at):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = f"INSERT INTO assigned_tickets (assignment_id, ticket_id, user_id, assigned_at) VALUES (%s, %s, %s, %s)"
         self.cursor.execute(query, (assignment_id, ticket_id, user_id, assigned_at))
         self.db_mysql_connector.commit()
         return self.cursor.lastrowid
 
     def update_data(self, table_name, new_data, condition_column, condition_value):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         columns = ', '.join(f"{column} = %s" for column in new_data)
         query = f"UPDATE {table_name} SET {columns} WHERE {condition_column} = %s;"
         values = tuple(new_data.values()) + (condition_value,)
@@ -84,16 +100,22 @@ class MySQLConnectorManager:
         self.db_mysql_connector.commit()
 
     def delete_all_data(self, table_name):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = f"DELETE FROM {table_name};"
         self.cursor.execute(query)
         self.db_mysql_connector.commit()
 
     def delete_one_data(self, table_name, condition_column, condition_value):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         query = f"DELETE FROM {table_name} WHERE {condition_column} = %s;"
         self.cursor.execute(query, (condition_value,))
         self.db_mysql_connector.commit()
 
     def get_data_by_condition(self, table_name, condition_column, condition_value):
+        if not self.db_mysql_connector.is_connected():
+            self.reconnect()
         self.cursor.execute(f"SELECT * FROM {table_name} WHERE {condition_column} = %s", (condition_value,))
         rows = self.cursor.fetchall()
         columns = [column[0] for column in self.cursor.description]

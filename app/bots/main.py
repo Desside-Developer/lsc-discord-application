@@ -5,11 +5,13 @@ sys.path.append('/code/app/bots/commands')
 sys.path.append('/code/app/bots/events')
 sys.path.append('/code/app/bots/tickets')
 
+import redis
 import discord
 import platform
 import time
 import logging
 import asyncio
+import datetime
 
 from colorama import Back, Fore, Style
 
@@ -20,7 +22,7 @@ from dispie import EmbedCreator
 
 from database.database import dbMaria
 from config import Bot_tickets, tickets_cogs
-
+manager_redis = redis.StrictRedis(host='bot-redis-stack-1', port=6379, db=0)
 
 class CustomLogging():
     logger: logging
@@ -137,7 +139,12 @@ async def embed(ctx: commands.Context):
     await ctx.send(embed=embed_main)
     await ctx.send(embed=embed_info)
 
-
+@Client.event
+async def on_disconnect():
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f'Бот был отключен в {current_time}')
 
 """Start Client"""
-Client.run(Bot_tickets)
+if __name__ == "__main__":
+    Client.run(Bot_tickets)
+    
