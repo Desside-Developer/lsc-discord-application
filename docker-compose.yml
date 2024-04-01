@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     working_dir: /code
     ports:
-      - '6901:6901'
+      - '127.0.0.1:6901:6901'
     volumes:
       - '.\\app:/code/app'
       - '.\\requirements.txt:/code/requirements.txt'
@@ -23,15 +23,14 @@ services:
   fastapi:
     ports:
       - '127.0.0.1:4547:3537'
-    image: 'python:3.12-alpine'
+    image: 'python:3.12'
     restart: unless-stopped
     working_dir: /code
     volumes:
-      - '.\\api:/code/api'
       - '.\\app:/code/app'
-      - '.\\requirements-fastapi.txt:/code/requirements-fastapi.txt'
+      - '.\\requirements.txt:/code/requirements.txt'
     command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements-fastapi.txt && uvicorn api.fastapi:app --host 0.0.0.0 --port 3537 --reload"
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && uvicorn app.bots.control:app --host 0.0.0.0 --port 3537 --reload"
   db:
     image: mariadb
     restart: always
@@ -50,7 +49,7 @@ services:
       - 'uptime-kuma:/app/data'
       - '/var/run/docker.sock:/var/run/docker.sock'
     ports:
-      - '7777:3001'
+      - '7777:3001' 
   grafana:
     image: grafana/grafana
     ports:

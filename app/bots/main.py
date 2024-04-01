@@ -12,6 +12,7 @@ import time
 import logging
 import asyncio
 import datetime
+import uvicorn
 
 from colorama import Back, Fore, Style
 
@@ -21,7 +22,7 @@ from easy_pil import Editor, load_image_async, Font
 from dispie import EmbedCreator
 
 from database.database import dbMaria
-from config import Bot_tickets, tickets_cogs
+from config import Bot_tickets, tickets_cogs, cogslist
 manager_redis = redis.StrictRedis(host='bot-redis-stack-1', port=6379, db=0)
 
 class CustomLogging():
@@ -37,24 +38,8 @@ print = CustomLogging().log
 class Client(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=commands.when_mentioned_or('%'), intents=discord.Intents.all())
-        self.cogslist = [
-            "logs.logging",
-            "commands.system_start",
-            "commands.system_on_reaction",
-            "commands.database_system",
-            "commands.nickname_on_join",
-            "commands.embeds_responder",
-            "commands.auto_reload_cogs",
-            "commands.status_server",
-            "events.on_member",
-            "tickets.ticket_report",
-            "tickets.ticket_rent",
-            "tickets.ticket_cheap",
-            "tickets.ticket_rep",
-            "tickets.ticket_set"
-            ]
     async def setup_hook(self):
-        for ext in self.cogslist:
+        for ext in cogslist:
             await self.load_extension(ext)
     async def on_ready(self):
         try:
@@ -63,41 +48,46 @@ class Client(commands.Bot):
             await self.tree.sync()
             await self.change_presence(status=discord.Status.dnd, activity=discord.Streaming(name='twinsikk', url='https://www.twitch.tv/twinsikk'))
             prfx = (Back.BLACK + Fore.GREEN + time.strftime("%H:%M:%S UTC", time.localtime()) + Back.RESET + Fore.WHITE + Style.BRIGHT)
-            print(prfx + " Logged in as " + Fore.YELLOW + self.user.name)
-            print(prfx + " ID: " + Fore.YELLOW + str(self.user.id))
-            print(prfx + " Version: " + Fore.YELLOW + str(discord.__version__))
-            print(prfx + " Platform: " + Fore.YELLOW + platform.system())
-            print(prfx + " Python: " + Fore.YELLOW + platform.python_version())
-            print(prfx + " Discord.py: " + Fore.YELLOW + discord.__version__)
-            print(prfx + " Bot: " + Fore.YELLOW + "Bot_tickets")
-            print(f"{Fore.GREEN}Бот {self.user} запущен!{Style.RESET_ALL}")
-            print(f'Вошёл как {self.user} (ID: {self.user.id})')
+            logging.info(f"""{Fore.CYAN}Logged in as: {Fore.LIGHTGREEN_EX}{self.user.name}
+{Fore.CYAN}Id: {Fore.LIGHTGREEN_EX}{self.user.id}
+{Fore.CYAN}Version: {Fore.LIGHTGREEN_EX}{discord.__version__}
+{Fore.CYAN}Platform: {Fore.LIGHTGREEN_EX}{platform.system()}
+{Fore.CYAN}Python: {Fore.LIGHTGREEN_EX}{platform.python_version()}
+{Fore.CYAN}Discord.py: {Fore.LIGHTGREEN_EX}{discord.__version__}
+{Fore.LIGHTYELLOW_EX}Bot: {Fore.MAGENTA}``{self.user}`` Start! {Style.RESET_ALL}""")
             Embed = discord.Embed(title="🚀° Bot Info", description=
-            f"""
-            ``Bot``: **Запущен**
+            f"""``Bot``: **{self.user}**
             ``Logged in as``: **{self.user.name}**
             ``ID``: **{str(self.user.id)}**
             ``Version``: **{str(discord.__version__)}**
             ``Platform``: **{platform.system()}**
             ``Python``: **{platform.python_version()}**
-            ``Discord.py``: **{discord.__version__}**
-            """, color=0x77eb34)
+            ``Discord.py``: **{discord.__version__}**""", color=0xFF8716)
             Embed.set_thumbnail(url="https://i.imgur.com/J60RRnz.png")
             user = self.get_user(960251916762378241)
             if user:
-                await user.send(embed=Embed)
-            else:
-                logging.error(f"Admin user with ID {960251916762378241} not found.")
+                return await user.send(embed=Embed)
+            logging.error(f"Admin user with ID {960251916762378241} not found.")
         except Exception as e:
             print(f"{Fore.RED}Error logging in as {self.user}: {e}{Style.RESET_ALL}")
+    async def on_disconnect(self):
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f'Бот был отключен в {current_time}')
 
-Client = Client()
+client_bot = Client()
 # Command's next
 """
 Slash Commands Next: //
 help
 """
-@Client.command(name="embed_responder")
+
+# Command Load Extension
+async def load_extension():
+    Client.load_extension()
+# Command Unload Extension
+# Command Reload Extension
+
+@client_bot.command(name="embed_responder")
 @commands.has_permissions(administrator=True)
 async def admin_embed(ctx: commands.Context):
     await ctx.message.delete()
@@ -105,7 +95,7 @@ async def admin_embed(ctx: commands.Context):
     await ctx.send(embed=view.get_default_embed, view=view)
 
 
-@Client.command(name="clearslash", description="Clears all registered slash commands.")
+@client_bot.command(name="clearslash", description="Clears all registered slash commands.")
 @commands.is_owner()
 async def clearslash(ctx: commands.Context):
     """Clears all registered slash commands. Only the bot owner can use this command."""
@@ -114,7 +104,7 @@ async def clearslash(ctx: commands.Context):
     Client.tree.clear_commands(guild=discord.Object(id=guild_id))
     await ctx.reply("All slash commands have been cleared.", mention_author=False)
 
-@Client.command(name='deletecommands', aliases=['clear'])
+@client_bot.command(name='deletecommands', aliases=['clear'])
 @commands.is_owner()
 async def delete_commands(ctx):
     Client.tree.clear_commands(guild=None)
@@ -122,7 +112,7 @@ async def delete_commands(ctx):
     await ctx.send('Commands deleted.')
 
 
-@Client.command(name='test-garage')
+@client_bot.command(name='test-garage')
 @commands.is_owner()
 async def embed(ctx: commands.Context):
     embed_main = discord.Embed(color=0xffffff, title="📌‧ нᴀɯи ᴦᴀᴩᴀжи!", description=f"""Если у вас возникают вопросы.
@@ -139,12 +129,6 @@ async def embed(ctx: commands.Context):
     await ctx.send(embed=embed_main)
     await ctx.send(embed=embed_info)
 
-@Client.event
-async def on_disconnect():
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f'Бот был отключен в {current_time}')
-
 """Start Client"""
 if __name__ == "__main__":
-    Client.run(Bot_tickets)
-    
+    app = client_bot.run(Bot_tickets)
