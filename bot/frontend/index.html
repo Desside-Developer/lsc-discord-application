@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HEELLO WORLD!</title>
+</head>
+<body>
+  <div id="particles-js" class="particles-js"></div>
+  <script src="https://res.cloudinary.com/dxfq3iotg/raw/upload/v1561436720/particles.js" class="particles-color"></script>
+  <script src="https://res.cloudinary.com/dxfq3iotg/raw/upload/v1561436735/app.js"></script>
+  <div class="div-2">
+    <h2 data-text="Gustavs"> &nbsp;&nbsp; </h2>
+      <p> Unique Bot for @Gustavs</p>
+      <p>Bot Join on Guilds: {{count}}</p>
+      <p>Working: On</p>
+      <div class="div-3">
+        <a href={{login_url}} data-title="Login", class="button-1"></a>
+        <a href="#" data-title="Docs", class="button-1"></a>
+      </div>
+    </div>
+  </body>
+  <style>
+    * {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .particles-js {
+    width: 100%;
+    position: absolute;
+    background-color: #222;
+    min-height: 100vh;
+  }
+  h2 {
+    position: relative;
+    font-size: 6em;
+    color: #222;
+    width: 376px;
+  }
+  h2::before {
+    content: attr(data-text);
+    position: absolute;
+    color: #fff;
+    width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 4px solid;
+    animation: animate 8s linear infinite;
+    filter: drop-shadow(0 0 20px #fff)drop-shadow(0 0 50px #fff);
+  }
+  @keyframes animate {
+    0%,10%,100% {
+      width: 0;
+    }
+    70%,90% {
+      width: 100%;
+    }
+  }
+  p {
+    font-size: 25px;
+    color: #fff;
+    filter: drop-shadow(0 0 20px #fff)drop-shadow(0 0 50px #fff);
+  }
+  button {
+    padding: 20px 120px;
+    background-color: violet;
+  }
+  .div-2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .div-3 {
+    display: flex;
+    margin-top: 50px;
+    justify-content: center;
+    align-items: center;
+  }
+  .button-1 {
+    position: relative;
+    display: inline-block;
+    padding: 1.2em 2em;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    color: white;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      border-radius: 4px;
+      transition: box-shadow .5s ease, transform .2s ease; 
+      transition: background-color .5s ease, transform .2s ease; 
+      background: linear-gradient(135deg, #ffffff, rgb(169, 169, 169), 193, 193);
+      will-change: transform;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, .2);
+    }
+    
+    &:hover::before {
+      background-color: rgb(150, 150, 150);
+      box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+    }
+    
+    &::after {
+      position: relative;
+      display: inline-block;
+      content: attr(data-title);
+      transition: transform .2s ease; 
+      font-weight: bold;
+      letter-spacing: .01em;
+      will-change: transform;
+    }
+  }
+
+
+</style>
+<script>
+
+$(document).ready(function(){
+
+  var count_particles, stats, update;
+  stats = new Stats;
+  stats.setMode(0);
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.left = '0px';
+  stats.domElement.style.top = '0px';
+  document.body.appendChild(stats.domElement);
+  count_particles = document.querySelector('.js-count-particles');
+  update = function() {
+  stats.begin();
+  stats.end();
+  if (window.pJSDom[0].pJS.particles && window.pJSDom[0].pJS.particles.array) {
+  count_particles.innerText = window.pJSDom[0].pJS.particles.array.length;
+  }
+  requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+  
+  
+  });
+</script>
+</html>

@@ -1,0 +1,67 @@
+{
+	"content": "@Everyone",
+	"Embeds": [
+		{
+			"header": "",
+			"color": "0xffffff",
+			"description": {},
+            "attachments": {
+                "set_author": {
+                    "content": null,
+                    "name": null,
+                    "url": null,
+                    "icon_url": null
+                },
+                "set_footer": {
+                    "content": null,
+                    "icon_url": null
+                },
+                "set_image": {
+                    "url": null
+                },
+                "set_thumbnail": {
+                    "url": null
+                },
+                "add_field": {
+                    "content": null,
+                    "name": null,
+                    "value": null,
+                    "inline": null
+                },
+                "set_field_at": {
+                    "index": 1,
+                    "name": "",
+                    "value": null,
+                    "inline": null
+                }
+            }
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		},
+		{
+			"color": "0xffffff"
+		}
+	]
+}

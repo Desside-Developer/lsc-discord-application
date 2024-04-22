@@ -1,25 +1,29 @@
 version: '3.8'
 services:
   bot:
-    image: 'python:3.12-alpine'
+    image: 'python:3.12'
     restart: unless-stopped
     working_dir: /code
     ports:
       - '127.0.0.1:6901:6901'
     volumes:
-      - '.\\app:/code/app'
+      - '.\\bot:/code/bot'
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python app/bots/main.py"
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && python bot/bot.py"
     depends_on:
       - db
+    networks:
+      - server
   adminer:
     image: adminer
     restart: unless-stopped
     ports:
       - '8080:8080'
     depends_on:
-      - bot
+      - db
+    networks:
+      - server
   fastapi:
     ports:
       - '127.0.0.1:4547:3537'
@@ -27,10 +31,14 @@ services:
     restart: unless-stopped
     working_dir: /code
     volumes:
-      - '.\\app:/code/app'
+      - '.\\bot:/code/bot'
       - '.\\requirements.txt:/code/requirements.txt'
     command: |
-      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && uvicorn app.bots.control:app --host 0.0.0.0 --port 3537 --reload"
+      sh -c "pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt && uvicorn bot.control:app --host 0.0.0.0 --port 3537 --reload"
+    depends_on:
+      - bot
+    networks:
+      - server
   db:
     image: mariadb
     restart: always
@@ -38,27 +46,14 @@ services:
       - MARIADB_ROOT_PASSWORD=pass12345
       - MYSQL_ROOT_PASSWORD=pass12345
       - MYSQL_DATABASE=lsc-bot-system-database
+    networks:
+      - server
   redis-stack:
     image: redis/redis-stack
     ports:
       - '6379:6379'
       - '8001:8001'
-  uptime-kuma:
-    image: elestio/uptime-kuma
-    volumes:
-      - 'uptime-kuma:/app/data'
-      - '/var/run/docker.sock:/var/run/docker.sock'
-    ports:
-      - '7777:3001' 
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "9801:3000"  # Map container port 3000 to host port 3000 (default)
-    volumes:
-      - grafana-data:/var/lib/grafana  # Optional volume to persist data
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=pass12345  # Set an admin password
-
-volumes:
-  uptime-kuma:  # Define the volume itself
-  grafana-data:  # Optional volume to persist data
+    networks:
+      - server
+networks:
+  server: null
